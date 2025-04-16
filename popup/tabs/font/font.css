@@ -1,0 +1,99 @@
+/* Font Tab Specific Styles */
+
+#font-tab h2 {
+    margin-bottom: 25px;
+}
+
+.font-input {
+    width: 100%;
+}
+
+.font-input input {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 16px;
+}
+
+.font-properties {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 15px;
+    margin-bottom: 20px;
+}
+
+.property-box {
+    background-color: var(--white);
+    border-radius: 8px;
+    padding: 15px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.property-box h4 {
+    color: var(--body);
+    margin-bottom: 10px;
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.property-box .value {
+    font-size: 16px;
+    color: var(--heading);
+    font-weight: 600;
+}
+
+.font-preview {
+    font-size: 16px;
+    padding: 15px;
+    background-color: var(--white);
+    border-radius: 4px;
+    min-height: 100px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+}
+
+.copy-font-btn {
+    background-color: var(--primary-color);
+    color: var(--white);
+    border: none;
+    padding: 8px 12px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 12px;
+    margin-top: 5px;
+    transition: background-color 0.3s;
+}
+
+.copy-font-btn:hover {
+    background-color: var(--secondary-color);
+}
+
+.font-family-container {
+    position: relative;
+}
+
+.font-formats {
+    display: flex;
+    gap: 10px;
+    margin-top: 15px;
+}
+
+.format-option {
+    background-color: var(--white);
+    border: 1px solid #ddd;
+    padding: 5px 10px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 12px;
+    transition: all 0.3s;
+}
+
+.format-option:hover,
+.format-option.active {
+    background-color: var(--primary-color);
+    color: var(--white);
+    border-color: var(--primary-color);
+}

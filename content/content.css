@@ -1,0 +1,9 @@
+.inspector-highlight {
+    outline: 2px dashed #1448ff !important;
+    background-color: rgba(20, 72, 255, 0.1) !important;
+    cursor: pointer !important;
+}
+
+body.picker-active {
+    cursor: crosshair !important;
+}
