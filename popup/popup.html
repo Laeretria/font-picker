@@ -1,152 +1,171 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Font & Color Inspector</title>
     <!-- Global styles -->
-    <link rel="stylesheet" href="global.css">
+    <link rel="stylesheet" href="global.css" />
     <!-- Tab-specific styles -->
-    <link rel="stylesheet" href="tabs/font/font.css">
-    <link rel="stylesheet" href="tabs/colors/colors.css">
-</head>
-<body>
+    <link rel="stylesheet" href="tabs/font/font.css" />
+    <link rel="stylesheet" href="tabs/colors/colors.css" />
+  </head>
+  <body>
     <div class="container">
-        <!-- Sidebar -->
-        <div class="sidebar">
-            <div class="logo">
-                <img src="../icons/icon48.png" alt="Logo">
-                <h1>Font & Color Inspector</h1>
-            </div>
-            <div class="nav-items">
-                <div class="nav-item active" data-tab="font">
-                    <span class="icon">Aa</span>
-                    <span class="label">Font</span>
-                </div>
-                <div class="nav-item" data-tab="colors">
-                    <span class="icon">🎨</span>
-                    <span class="label">Colors</span>
-                </div>
-            </div>
-            <div class="element-picker">
-                <button id="element-picker-btn">Pick Element</button>
-            </div>
-            <div class="credits">
-                <p>Gemaakt door <img src="/assets/images/kreatix-logo.png" alt="Kreatix"> Kreatix</p>
-            </div>
+      <!-- Sidebar -->
+      <div class="sidebar">
+        <div class="logo">
+          <img src="/assets/icons/icon48.png" alt="Logo" />
+          <h1>Font & Color Inspector</h1>
         </div>
-
-        <!-- Main Content -->
-        <div class="main-content">
-            <!-- Font Tab -->
-            <div class="tab-content active" id="font-tab">
-                <h2>Font Analysis</h2>
-                
-                <!-- Heading Font -->
-                <div class="section">
-                    <h3>Heading</h3>
-                    <div class="font-input">
-                        <input type="text" id="heading-font" readonly>
-                    </div>
-                </div>
-                
-                <!-- Body Font -->
-                <div class="section">
-                    <h3>Body</h3>
-                    <div class="font-input">
-                        <input type="text" id="body-font" readonly>
-                    </div>
-                </div>
-                
-                <!-- Font Properties -->
-                <div class="font-properties">
-                    <div class="property-box">
-                        <h4>Style</h4>
-                        <div class="value" id="font-style">normal</div>
-                    </div>
-                    <div class="property-box">
-                        <h4>Weight</h4>
-                        <div class="value" id="font-weight">400</div>
-                    </div>
-                    <div class="property-box">
-                        <h4>Size</h4>
-                        <div class="value" id="font-size">16px</div>
-                    </div>
-                    <div class="property-box">
-                        <h4>Line Height</h4>
-                        <div class="value" id="line-height">24px</div>
-                    </div>
-                </div>
-                
-                <!-- Font Format Options -->
-                <div class="section">
-                    <h3>Font Formats</h3>
-                    <div class="font-formats">
-                        <div class="format-option active" data-format="css">CSS</div>
-                        <div class="format-option" data-format="tailwind">Tailwind</div>
-                        <div class="format-option" data-format="figma">Figma</div>
-                    </div>
-                </div>
-                
-                <!-- Font Preview -->
-                <div class="section">
-                    <h3>Font preview</h3>
-                    <div class="font-preview" id="font-preview">
-                        The quick brown fox jumps over the lazy dog
-                    </div>
-                </div>
-            </div>
-
-            <!-- Colors Tab -->
-            <div class="tab-content" id="colors-tab">
-                <h2>Color Analysis</h2>
-                
-                <div class="color-format-selector" id="format-selector">
-                    <div class="format-btn active" data-format="hex">HEX</div>
-                    <div class="format-btn" data-format="rgb">RGB</div>
-                    <div class="format-btn" data-format="hsl">HSL</div>
-                </div>
-                
-                <div class="color-wheel-container">
-                    <div class="color-wheel" id="color-wheel">
-                        <!-- The color wheel will be generated by JavaScript -->
-                    </div>
-                    
-                    <div class="color-stats">
-                        <div class="color-stat">
-                            <div class="stat-number" id="total-colors">0</div>
-                            <div class="stat-label">Total Colors</div>
-                        </div>
-                        <div class="color-stat">
-                            <div class="stat-number" id="bg-colors">0</div>
-                            <div class="stat-label">Background</div>
-                        </div>
-                        <div class="color-stat">
-                            <div class="stat-number" id="text-colors-count">0</div>
-                            <div class="stat-label">Text</div>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="color-list-container">
-                    <h3>Background Colors</h3>
-                    <div class="color-list" id="background-colors"></div>
-                    
-                    <h3>Text Colors</h3>
-                    <div class="color-list" id="text-colors"></div>
-                    
-                    <h3>Border Colors</h3>
-                    <div class="color-list" id="border-colors"></div>
-                </div>
-            </div>
+        <div class="nav-items">
+          <div class="nav-item active" data-tab="font">
+            <span class="icon">Aa</span>
+            <span class="label">Font</span>
+          </div>
+          <div class="nav-item" data-tab="colors">
+            <span class="icon">🎨</span>
+            <span class="label">Colors</span>
+          </div>
         </div>
+        <div class="element-picker">
+          <button id="element-picker-btn">Pick Element</button>
+        </div>
+        <div class="credits">
+          <p>
+            Gemaakt door
+            <img src="/assets/images/kreatix-logo.png" alt="Kreatix" />
+          </p>
+        </div>
+      </div>
+
+      <!-- Main Content -->
+      <div class="main-content">
+        <!-- Font Tab -->
+        <div class="tab-content active" id="font-tab">
+          <h2>Font Analysis</h2>
+
+          <!-- Heading Font -->
+          <div class="font-card">
+            <div class="font-card-header">Heading</div>
+            <div class="font-card-content">
+              <div class="font-value-container">
+                <p id="heading-font" class="font-value">Regola</p>
+                <button
+                  class="copy-font-btn copy-heading-font"
+                  data-copy="Regola"
+                >
+                  Copy
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Body Font -->
+          <div class="font-card">
+            <div class="font-card-header">Body</div>
+            <div class="font-card-content">
+              <div class="font-value-container">
+                <p id="body-font" class="font-value">Regola</p>
+                <button class="copy-font-btn copy-body-font" data-copy="Regola">
+                  Copy
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Font Properties -->
+          <div class="property-boxes">
+            <div class="font-card">
+              <div class="font-card-header">Style</div>
+              <div class="font-card-content" id="font-style">normal</div>
+            </div>
+            <div class="font-card">
+              <div class="font-card-header">Weight</div>
+              <div class="font-card-content" id="font-weight">400</div>
+            </div>
+            <div class="font-card">
+              <div class="font-card-header">Size</div>
+              <div class="font-card-content" id="font-size">16px</div>
+            </div>
+            <div class="font-card">
+              <div class="font-card-header">Line Height</div>
+              <div class="font-card-content" id="line-height">24px</div>
+            </div>
+          </div>
+
+          <!-- Font Format Options -->
+          <div class="font-card">
+            <div class="font-card-header">Font Formats</div>
+            <div class="font-card-content">
+              <div class="font-formats">
+                <div class="format-option active" data-format="css">CSS</div>
+                <div class="format-option" data-format="tailwind">Tailwind</div>
+                <div class="format-option" data-format="figma">Figma</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Font Preview -->
+          <div class="font-card">
+            <div class="font-card-header">Font preview</div>
+            <div class="font-card-content">
+              <div class="font-preview" id="font-preview">
+                The quick brown fox jumps over the lazy dog
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- Colors Tab -->
+        <div class="tab-content" id="colors-tab">
+          <h2>Color Analysis</h2>
+
+          <div class="color-format-selector" id="format-selector">
+            <div class="format-btn active" data-format="hex">HEX</div>
+            <div class="format-btn" data-format="rgb">RGB</div>
+            <div class="format-btn" data-format="hsl">HSL</div>
+          </div>
+
+          <div class="color-wheel-container">
+            <div class="color-wheel" id="color-wheel">
+              <!-- The color wheel will be generated by JavaScript -->
+            </div>
+
+            <div class="color-stats">
+              <div class="color-stat">
+                <div class="stat-number" id="total-colors">0</div>
+                <div class="stat-label">Total Colors</div>
+              </div>
+              <div class="color-stat">
+                <div class="stat-number" id="bg-colors">0</div>
+                <div class="stat-label">Background</div>
+              </div>
+              <div class="color-stat">
+                <div class="stat-number" id="text-colors-count">0</div>
+                <div class="stat-label">Text</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="color-list-container">
+            <h3>Background Colors</h3>
+            <div class="color-list" id="background-colors"></div>
+
+            <h3>Text Colors</h3>
+            <div class="color-list" id="text-colors"></div>
+
+            <h3>Border Colors</h3>
+            <div class="color-list" id="border-colors"></div>
+          </div>
+        </div>
+      </div>
     </div>
-    
+
     <!-- Tab-specific scripts -->
     <script src="tabs/font/font.js"></script>
     <script src="tabs/colors/colors.js"></script>
-    
+
     <!-- Main popup controller -->
     <script src="popup.js"></script>
-</body>
+  </body>
 </html>

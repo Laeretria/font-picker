@@ -1,99 +1,115 @@
 /* Font Tab Specific Styles */
-
-#font-tab h2 {
-    margin-bottom: 25px;
+#font-tab {
+  display: flex;
+  flex-direction: column;
+  gap: var(--card-gap);
 }
 
-.font-input {
-    width: 100%;
+/* Font card styling */
+.font-card-content {
+  padding: 12px 16px;
+  color: var(--body);
+  font-size: 16px !important;
+  word-break: break-word;
 }
 
-.font-input input {
-    width: 100%;
-    padding: 10px;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    font-size: 16px;
+.font-card-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 16px;
+  background-color: var(--header-bg);
+  border-bottom: 1px solid var(--border-color);
+  font-family: 'Regola-Bold';
+  font-size: 18px;
+  border-top-left-radius: 6px;
+  border-top-right-radius: 6px;
+  color: var(--title-color);
 }
 
-.font-properties {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 15px;
-    margin-bottom: 20px;
+.font-card {
+  background: var(--white);
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  overflow: hidden;
 }
 
-.property-box {
-    background-color: var(--white);
-    border-radius: 8px;
-    padding: 15px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+/* Property boxes using flexbox with gap */
+.property-boxes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--card-gap);
 }
 
-.property-box h4 {
-    color: var(--body);
-    margin-bottom: 10px;
-    font-size: 14px;
-    font-weight: 500;
+.property-boxes .font-card {
+  flex: 1;
+  min-width: 120px;
+  margin-bottom: 0; /* Remove margin as we're using gap */
 }
 
-.property-box .value {
-    font-size: 16px;
-    color: var(--heading);
-    font-weight: 600;
+/* Font value container */
+.font-value-container {
+  position: relative;
+  display: flex;
+  align-items: center;
 }
 
+.font-value {
+  flex: 1;
+  margin: 0;
+  font-size: 16px;
+}
+
+/* Font preview */
 .font-preview {
-    font-size: 16px;
-    padding: 15px;
-    background-color: var(--white);
-    border-radius: 4px;
-    min-height: 100px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    text-align: center;
+  font-size: 16px;
+  padding: 15px;
+  background-color: var(--white);
+  border-radius: 4px;
+  min-height: 100px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  font-size: inherit;
+  line-height: inherit;
+  word-break: break-word;
 }
 
+/* Copy button */
 .copy-font-btn {
-    background-color: var(--primary-color);
-    color: var(--white);
-    border: none;
-    padding: 8px 12px;
-    border-radius: 4px;
-    cursor: pointer;
-    font-size: 12px;
-    margin-top: 5px;
-    transition: background-color 0.3s;
+  background-color: var(--primary-color);
+  color: var(--white);
+  border: none;
+  padding: 8px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 12px;
+  transition: all 0.3s ease;
 }
 
 .copy-font-btn:hover {
-    background-color: var(--secondary-color);
+  background-color: var(--secondary-color);
 }
 
-.font-family-container {
-    position: relative;
-}
-
+/* Font formats */
 .font-formats {
-    display: flex;
-    gap: 10px;
-    margin-top: 15px;
+  display: flex;
+  gap: 8px;
 }
 
 .format-option {
-    background-color: var(--white);
-    border: 1px solid #ddd;
-    padding: 5px 10px;
-    border-radius: 4px;
-    cursor: pointer;
-    font-size: 12px;
-    transition: all 0.3s;
+  padding: 6px 12px;
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 12px;
+  transition: all 0.3s;
 }
 
 .format-option:hover,
 .format-option.active {
-    background-color: var(--primary-color);
-    color: var(--white);
-    border-color: var(--primary-color);
+  background-color: var(--primary-color);
+  color: var(--white);
+  border-color: var(--primary-color);
 }
