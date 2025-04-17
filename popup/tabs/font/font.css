@@ -84,8 +84,9 @@
   padding: 8px 12px;
   border-radius: 4px;
   cursor: pointer;
-  font-size: 12px;
+  font-size: 13px;
   transition: all 0.3s ease;
+  font-family: 'Regola-Medium';
 }
 
 .copy-font-btn:hover {

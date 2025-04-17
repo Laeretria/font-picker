@@ -87,6 +87,8 @@ body {
   padding: 15px 20px;
   cursor: pointer;
   transition: background-color 0.3s;
+  transition: opacity 0.2s ease;
+  opacity: 0.7;
 }
 
 .nav-item:hover {
@@ -95,6 +97,7 @@ body {
 
 .nav-item.active {
   background-color: var(--primary-color);
+  opacity: 1;
 }
 
 .nav-item .icon {
@@ -141,12 +144,14 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--body);
+  color: var(--heading);
+  font-size: 10px;
+  font-family: 'Regola-Regular';
 }
 
 .credits img {
-  height: 16px;
-  margin: 0 4px;
+  width: 80px;
+  margin-left: 10px;
 }
 
 /* Main Content Styles */
@@ -157,12 +162,22 @@ body {
   overflow-y: auto;
 }
 
+/* Add these rules to your global.css file */
+
+/* Tab Content Display Rules - uses visibility instead of display to preserve layout */
 .tab-content {
-  display: none;
+  visibility: hidden;
+  height: 0;
+  overflow: hidden;
+  opacity: 0;
+  transition: opacity 0.2s ease;
 }
 
 .tab-content.active {
-  display: block;
+  visibility: visible;
+  height: auto;
+  overflow: visible;
+  opacity: 1;
 }
 
 h2 {

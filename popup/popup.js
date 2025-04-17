@@ -1,64 +1,138 @@
-// Main popup controller
+// FIXED popup.js that preserves flex and gap layouts
+document.addEventListener('DOMContentLoaded', function () {
+  // Initialize variables
+  let fontTab = null
+  let colorsTab = null
 
-document.addEventListener('DOMContentLoaded', function() {
-    // Initialize tab controllers
-    let fontTab = null;
-    let colorsTab = null;
-    
-    // Tab switching functionality
-    const navItems = document.querySelectorAll('.nav-item');
-    const tabContents = document.querySelectorAll('.tab-content');
-    
-    navItems.forEach(item => {
-        item.addEventListener('click', function() {
-            // Remove active class from all nav items and tab contents
-            navItems.forEach(navItem => navItem.classList.remove('active'));
-            tabContents.forEach(content => content.classList.remove('active'));
-            
-            // Add active class to clicked nav item and corresponding tab content
-            const tabId = this.getAttribute('data-tab');
-            this.classList.add('active');
-            document.getElementById(`${tabId}-tab`).classList.add('active');
-            
-            // Initialize the appropriate tab controller if not already done
-            if (tabId === 'font' && !fontTab) {
-                fontTab = new FontTab();
-            } else if (tabId === 'colors' && !colorsTab) {
-                colorsTab = new ColorsTab();
-            }
-        });
-    });
-    
-    // Element picker functionality
-    const elementPickerBtn = document.getElementById('element-picker-btn');
-    elementPickerBtn.addEventListener('click', function() {
-        chrome.tabs.query({active: true, currentWindow: true}, function(tabs) {
-            chrome.tabs.sendMessage(tabs[0].id, {action: "togglePicker"});
-            window.close(); // Close popup to allow user to interact with the page
-        });
-    });
-    
-    // Initialize the default active tab
-    const activeTabId = document.querySelector('.nav-item.active').getAttribute('data-tab');
-    if (activeTabId === 'font') {
-        fontTab = new FontTab();
-    } else if (activeTabId === 'colors') {
-        colorsTab = new ColorsTab();
-    }
-    
-    // Listen for messages from content script
-    chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
-        if (request.action === "elementSelected") {
-            // Re-open the popup after element selection
-            // Note: This doesn't actually work because the popup context is destroyed
-            // We would need to store this data in background.js or localStorage
-            
-            if (request.fontData && fontTab) {
-                fontTab.updateSelectedElementFontData(request.fontData);
-            }
-            if (request.colorData && colorsTab) {
-                colorsTab.updateSelectedElementColorData(request.colorData);
-            }
+  console.log('Popup initialized')
+
+  // Tab switching functionality
+  const navItems = document.querySelectorAll('.nav-item')
+  const tabContents = document.querySelectorAll('.tab-content')
+
+  console.log('Found nav items:', navItems.length)
+  console.log('Found tab contents:', tabContents.length)
+
+  navItems.forEach((item) => {
+    item.addEventListener('click', function (e) {
+      console.log('Tab clicked:', this.getAttribute('data-tab'))
+
+      // Get the target tab ID
+      const tabId = this.getAttribute('data-tab')
+      const targetTabElement = document.getElementById(`${tabId}-tab`)
+
+      if (!targetTabElement) {
+        console.error(`Tab content with ID "${tabId}-tab" not found!`)
+        return
+      }
+
+      // Remove active class from all nav items
+      navItems.forEach((navItem) => {
+        navItem.classList.remove('active')
+      })
+
+      // Add active class to clicked nav item
+      this.classList.add('active')
+
+      // Hide all tab contents by removing active class
+      // This preserves flex display and gap properties from CSS
+      tabContents.forEach((content) => {
+        content.classList.remove('active')
+      })
+
+      // Show the selected tab content by adding active class
+      targetTabElement.classList.add('active')
+
+      console.log(`Switched to ${tabId} tab`)
+
+      // Initialize tab controllers if needed
+      try {
+        if (tabId === 'font' && !fontTab) {
+          console.log('Initializing FontTab')
+          if (typeof FontTab !== 'undefined') {
+            fontTab = new FontTab()
+          } else {
+            console.error('FontTab class is not defined!')
+          }
+        } else if (tabId === 'colors' && !colorsTab) {
+          console.log('Initializing ColorsTab')
+          if (typeof ColorsTab !== 'undefined') {
+            colorsTab = new ColorsTab()
+          } else {
+            console.error('ColorsTab class is not defined!')
+          }
         }
-    });
-});
+      } catch (error) {
+        console.error('Error initializing tab controller:', error)
+      }
+    })
+  })
+
+  // Element picker functionality
+  const elementPickerBtn = document.getElementById('element-picker-btn')
+  if (elementPickerBtn) {
+    elementPickerBtn.addEventListener('click', function () {
+      chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
+        if (tabs && tabs[0] && tabs[0].id) {
+          chrome.tabs.sendMessage(tabs[0].id, { action: 'togglePicker' })
+          window.close()
+        } else {
+          console.error('Unable to find active tab')
+        }
+      })
+    })
+  }
+
+  // Initialize the default active tab
+  const activeNavItem = document.querySelector('.nav-item.active')
+  if (activeNavItem) {
+    const activeTabId = activeNavItem.getAttribute('data-tab')
+    console.log('Default active tab:', activeTabId)
+
+    try {
+      if (activeTabId === 'font') {
+        if (typeof FontTab !== 'undefined') {
+          fontTab = new FontTab()
+        } else {
+          console.error('FontTab class is not defined!')
+        }
+      } else if (activeTabId === 'colors') {
+        if (typeof ColorsTab !== 'undefined') {
+          colorsTab = new ColorsTab()
+        } else {
+          console.error('ColorsTab class is not defined!')
+        }
+      }
+    } catch (error) {
+      console.error('Error initializing default tab:', error)
+    }
+  }
+
+  // Listen for messages from content script
+  chrome.runtime.onMessage.addListener(function (
+    request,
+    sender,
+    sendResponse
+  ) {
+    if (request.action === 'elementSelected') {
+      console.log('Element selected message received:', request)
+
+      if (request.fontData && fontTab) {
+        try {
+          fontTab.updateSelectedElementFontData(request.fontData)
+        } catch (error) {
+          console.error('Error updating font data:', error)
+        }
+      }
+
+      if (request.colorData && colorsTab) {
+        try {
+          colorsTab.updateSelectedElementColorData(request.colorData)
+        } catch (error) {
+          console.error('Error updating color data:', error)
+        }
+      }
+    }
+    return true // Keep the message channel open for async response
+  })
+})
