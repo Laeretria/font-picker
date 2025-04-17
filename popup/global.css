@@ -154,6 +154,15 @@ body {
   margin-left: 10px;
 }
 
+.credits a {
+  display: inline-flex;
+  transition: opacity 0.2s ease;
+}
+
+.credits a:hover {
+  opacity: 0.8;
+}
+
 /* Main Content Styles */
 .main-content {
   flex: 1;
