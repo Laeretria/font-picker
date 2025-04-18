@@ -17,6 +17,11 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
       sendResponse({ colors: result })
     })
     return true // Keep the message channel open for async response
+  } else if (request.action === 'cancelPicker') {
+    if (pickerActive) {
+      toggleElementPicker() // Deactivate the picker
+    }
+    return true
   }
 })
 
@@ -30,6 +35,22 @@ function toggleElementPicker() {
     document.addEventListener('click', selectElement)
     document.addEventListener('keydown', cancelPicker)
     document.body.classList.add('picker-active')
+
+    // Add a visual indicator that the picker is active
+    const indicatorDiv = document.createElement('div')
+    indicatorDiv.id = 'element-picker-indicator'
+    indicatorDiv.textContent = 'Element Picker Active (ESC to cancel)'
+    indicatorDiv.style.position = 'fixed'
+    indicatorDiv.style.top = '10px'
+    indicatorDiv.style.right = '10px'
+    indicatorDiv.style.backgroundColor = 'rgba(0, 123, 255, 0.9)'
+    indicatorDiv.style.color = 'white'
+    indicatorDiv.style.padding = '5px 10px'
+    indicatorDiv.style.borderRadius = '4px'
+    indicatorDiv.style.zIndex = '9999999'
+    indicatorDiv.style.fontSize = '12px'
+    indicatorDiv.style.fontFamily = 'Arial, sans-serif'
+    document.body.appendChild(indicatorDiv)
   } else {
     // Remove event listeners when picker is deactivated
     document.removeEventListener('mouseover', highlightElement)
@@ -37,6 +58,12 @@ function toggleElementPicker() {
     document.removeEventListener('keydown', cancelPicker)
     document.body.classList.remove('picker-active')
     removeHighlight()
+
+    // Remove the indicator
+    const indicator = document.getElementById('element-picker-indicator')
+    if (indicator) {
+      indicator.remove()
+    }
   }
 }
 
@@ -50,13 +77,24 @@ function highlightElement(e) {
 
   // Add highlight to current element
   highlightedElement = e.target
-  highlightedElement.classList.add('inspector-highlight')
+
+  // Save the original styles to restore later
+  highlightedElement._originalOutline = highlightedElement.style.outline
+  highlightedElement._originalOutlineOffset =
+    highlightedElement.style.outlineOffset
+
+  // Apply highlight styles
+  highlightedElement.style.outline = '2px solid #1448ff'
+  highlightedElement.style.outlineOffset = '2px'
 }
 
 // Remove highlight
 function removeHighlight() {
   if (highlightedElement) {
-    highlightedElement.classList.remove('inspector-highlight')
+    // Restore original styles
+    highlightedElement.style.outline = highlightedElement._originalOutline || ''
+    highlightedElement.style.outlineOffset =
+      highlightedElement._originalOutlineOffset || ''
     highlightedElement = null
   }
 }
@@ -77,6 +115,10 @@ function selectElement(e) {
     weight: computedStyle.fontWeight,
     size: computedStyle.fontSize,
     lineHeight: computedStyle.lineHeight,
+    element: element.tagName.toLowerCase(),
+    text:
+      element.textContent.slice(0, 20) +
+      (element.textContent.length > 20 ? '...' : ''),
   }
 
   // Get color data
@@ -84,6 +126,10 @@ function selectElement(e) {
     text: computedStyle.color,
     background: computedStyle.backgroundColor,
     border: computedStyle.borderColor,
+    element: element.tagName.toLowerCase(),
+    text:
+      element.textContent.slice(0, 20) +
+      (element.textContent.length > 20 ? '...' : ''),
   }
 
   // Send data to popup
@@ -101,6 +147,11 @@ function selectElement(e) {
 function cancelPicker(e) {
   if (e.key === 'Escape') {
     toggleElementPicker()
+
+    // Notify the popup that picker has been canceled
+    chrome.runtime.sendMessage({
+      action: 'pickerCanceled',
+    })
   }
 }
 
@@ -258,3 +309,16 @@ async function analyzeColors() {
     border: borderColors,
   }
 }
+
+// Add styles for picker
+const style = document.createElement('style')
+style.textContent = `
+.picker-active {
+  cursor: crosshair !important;
+}
+
+.picker-active * {
+  cursor: crosshair !important;
+}
+`
+document.head.appendChild(style)

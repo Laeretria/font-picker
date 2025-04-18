@@ -11,19 +11,19 @@
     <link rel="stylesheet" href="tabs/colors/colors.css" />
   </head>
   <body>
-    <div class="container">
+    <div class="container app-container">
       <!-- Sidebar -->
       <div class="sidebar">
-        <div class="logo">
-          <img src="/assets/icons/icon48.png" alt="Logo" />
-          <h1>Font & Color Inspector</h1>
+        <div class="logo sidebar-header">
+          <img src="/assets/icons/icon48.png" alt="Logo" class="sidebar-logo" />
+          <h1 class="sidebar-title">Font & Color Inspector</h1>
         </div>
-        <div class="nav-items">
-          <div class="nav-item active" data-tab="font">
+        <div class="nav-items tabs">
+          <div class="nav-item tab-button active" data-tab="font">
             <span class="icon">Aa</span>
             <span class="label">Font</span>
           </div>
-          <div class="nav-item" data-tab="colors">
+          <div class="nav-item tab-button" data-tab="colors">
             <span class="icon">🎨</span>
             <span class="label">Colors</span>
           </div>
@@ -31,6 +31,49 @@
         <div class="element-picker">
           <button id="element-picker-btn">Pick Element</button>
         </div>
+
+        <!-- Updated minimize button HTML -->
+        <div class="sidebar-bottom">
+          <!-- Minimize Button -->
+          <div id="minimize-button" class="minimize-button">
+            <!-- Minimize Icon (shown when maximized) -->
+            <svg
+              class="minimize-icon"
+              viewBox="0 0 20 20"
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              width="20"
+              height="20"
+            >
+              <g id="SVGRepo_iconCarrier">
+                <path
+                  fill="currentColor"
+                  fill-rule="evenodd"
+                  d="M11 8a1 1 0 001 1h6a1 1 0 100-2h-3.586l3.793-3.793a1 1 0 00-1.414-1.414L13 5.586V2a1 1 0 10-2 0v6zm-2 4a1 1 0 00-1-1H2a1 1 0 100 2h3.586l-3.793 3.793a1 1 0 101.414 1.414L7 14.414V18a1 1 0 102 0v-6z"
+                ></path>
+              </g>
+            </svg>
+            <!-- Maximize Icon (shown when minimized) -->
+            <svg
+              class="maximize-icon"
+              viewBox="0 0 20 20"
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              width="20"
+              height="20"
+            >
+              <g id="SVGRepo_iconCarrier">
+                <path
+                  fill="currentColor"
+                  fill-rule="evenodd"
+                  d="M19 2a1 1 0 00-1-1h-6a1 1 0 100 2h3.586l-3.793 3.793a1 1 0 001.414 1.414L17 4.414V8a1 1 0 102 0V2zM1 18a1 1 0 001 1h6a1 1 0 100-2H4.414l3.793-3.793a1 1 0 10-1.414-1.414L3 15.586V12a1 1 0 10-2 0v6z"
+                ></path>
+              </g>
+            </svg>
+            <span class="minimize-text">Minimaliseer</span>
+          </div>
+        </div>
+
         <div class="credits">
           <p>
             Gemaakt door
