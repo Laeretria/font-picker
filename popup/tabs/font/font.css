@@ -36,9 +36,9 @@
 
 /* Property boxes using flexbox with gap */
 .property-boxes {
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
   gap: var(--card-gap);
+  grid-template-columns: 1fr 1fr;
 }
 
 .property-boxes .font-card {

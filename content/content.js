@@ -2,26 +2,83 @@
 let pickerActive = false
 let highlightedElement = null
 
-// Listen for messages from popup
+// Send a ready message when the content script loads
+console.log('Content script loaded on: ' + window.location.href)
+
+// Add a style element for the highlighter
+const styleElement = document.createElement('style')
+styleElement.textContent = `
+  .picker-active {
+    cursor: crosshair !important;
+  }
+
+  .picker-active * {
+    cursor: crosshair !important;
+  }
+  
+  .inspector-highlight {
+    outline: 2px dashed #1448ff !important;
+    background-color: rgba(20, 72, 255, 0.1) !important;
+    cursor: pointer !important;
+  }
+`
+document.head.appendChild(styleElement)
+
+// Set up a message listener
 chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
+  console.log('Content script received message:', request.action)
+
+  // Simple ping to check if content script is running
+  if (request.action === 'ping') {
+    sendResponse({ status: 'ok' })
+    return true
+  }
+
   if (request.action === 'togglePicker') {
     toggleElementPicker()
+    sendResponse({ status: 'ok' })
     return true
   } else if (request.action === 'analyzeFonts') {
-    analyzeFonts().then((result) => {
-      sendResponse({ fonts: result })
-    })
+    analyzeFonts()
+      .then((result) => {
+        sendResponse({ fonts: result })
+      })
+      .catch((error) => {
+        console.error('Error analyzing fonts:', error)
+        sendResponse({ error: 'Failed to analyze fonts' })
+      })
     return true // Keep the message channel open for async response
   } else if (request.action === 'analyzeColors') {
-    analyzeColors().then((result) => {
-      sendResponse({ colors: result })
-    })
+    analyzeColors()
+      .then((result) => {
+        sendResponse({ colors: result })
+      })
+      .catch((error) => {
+        console.error('Error analyzing colors:', error)
+        sendResponse({ error: 'Failed to analyze colors' })
+      })
     return true // Keep the message channel open for async response
   } else if (request.action === 'cancelPicker') {
     if (pickerActive) {
       toggleElementPicker() // Deactivate the picker
     }
+    sendResponse({ status: 'ok' })
     return true
+  } else if (request.action === 'analyzePage') {
+    // This is a new action to analyze both fonts and colors at once
+    Promise.all([analyzeFonts(), analyzeColors()])
+      .then(([fonts, colors]) => {
+        sendResponse({
+          fonts: fonts,
+          colors: colors,
+          url: window.location.href,
+        })
+      })
+      .catch((error) => {
+        console.error('Error analyzing page:', error)
+        sendResponse({ error: 'Failed to analyze page' })
+      })
+    return true // Keep the message channel open for async response
   }
 })
 
@@ -82,19 +139,26 @@ function highlightElement(e) {
   highlightedElement._originalOutline = highlightedElement.style.outline
   highlightedElement._originalOutlineOffset =
     highlightedElement.style.outlineOffset
+  highlightedElement._originalBackgroundColor =
+    highlightedElement.style.backgroundColor
 
-  // Apply highlight styles
-  highlightedElement.style.outline = '2px solid #1448ff'
-  highlightedElement.style.outlineOffset = '2px'
+  // Apply highlight styles using the inspector-highlight class
+  highlightedElement.classList.add('inspector-highlight')
 }
 
 // Remove highlight
 function removeHighlight() {
   if (highlightedElement) {
+    // Remove the highlight class
+    highlightedElement.classList.remove('inspector-highlight')
+
     // Restore original styles
     highlightedElement.style.outline = highlightedElement._originalOutline || ''
     highlightedElement.style.outlineOffset =
       highlightedElement._originalOutlineOffset || ''
+    highlightedElement.style.backgroundColor =
+      highlightedElement._originalBackgroundColor || ''
+
     highlightedElement = null
   }
 }
@@ -202,123 +266,136 @@ function getActualFontFamily(element) {
 
 // Analyze fonts on the page
 async function analyzeFonts() {
-  // Find heading elements
-  const headingElements = document.querySelectorAll('h1, h2, h3, h4, h5, h6')
-  let headingFontFamily = ''
+  try {
+    // Find heading elements
+    const headingElements = document.querySelectorAll('h1, h2, h3, h4, h5, h6')
+    let headingFontFamily = ''
 
-  if (headingElements.length > 0) {
-    headingFontFamily = getActualFontFamily(headingElements[0])
-  }
-
-  // Find body text
-  const bodyElements = document.querySelectorAll(
-    'p, div:not(:empty), span:not(:empty), li:not(:empty)'
-  )
-  let bodyFontFamily = ''
-  let bodyStyle = ''
-  let bodyWeight = ''
-  let bodySize = ''
-  let bodyLineHeight = ''
-
-  if (bodyElements.length > 0) {
-    // Filter to get elements that actually contain text
-    const textElements = Array.from(bodyElements).filter((el) => {
-      // Check if element contains actual text content, not just whitespace
-      const text = el.textContent.trim()
-      return text.length > 10 // Element should have a reasonable amount of text
-    })
-
-    if (textElements.length > 0) {
-      // Sort by content length to prioritize elements with more text
-      textElements.sort((a, b) => b.textContent.length - a.textContent.length)
-
-      // Get the element with the most text content (likely a main paragraph)
-      const mainTextElement = textElements[0]
-      const computedStyle = window.getComputedStyle(mainTextElement)
-
-      bodyFontFamily = getActualFontFamily(mainTextElement)
-      bodyStyle = computedStyle.fontStyle
-      bodyWeight = computedStyle.fontWeight
-      bodySize = computedStyle.fontSize
-      bodyLineHeight = computedStyle.lineHeight
+    if (headingElements.length > 0) {
+      headingFontFamily = getActualFontFamily(headingElements[0])
     }
-  }
 
-  return {
-    heading: {
-      family: headingFontFamily || 'Not found',
-    },
-    body: {
-      family: bodyFontFamily || 'Not found',
-      style: bodyStyle || 'normal',
-      weight: bodyWeight || '400',
-      size: bodySize || '16px',
-      lineHeight: bodyLineHeight || '24px',
-    },
+    // Find body text
+    const bodyElements = document.querySelectorAll(
+      'p, div:not(:empty), span:not(:empty), li:not(:empty)'
+    )
+    let bodyFontFamily = ''
+    let bodyStyle = ''
+    let bodyWeight = ''
+    let bodySize = ''
+    let bodyLineHeight = ''
+
+    if (bodyElements.length > 0) {
+      // Filter to get elements that actually contain text
+      const textElements = Array.from(bodyElements).filter((el) => {
+        // Check if element contains actual text content, not just whitespace
+        const text = el.textContent.trim()
+        return text.length > 10 // Element should have a reasonable amount of text
+      })
+
+      if (textElements.length > 0) {
+        // Sort by content length to prioritize elements with more text
+        textElements.sort((a, b) => b.textContent.length - a.textContent.length)
+
+        // Get the element with the most text content (likely a main paragraph)
+        const mainTextElement = textElements[0]
+        const computedStyle = window.getComputedStyle(mainTextElement)
+
+        bodyFontFamily = getActualFontFamily(mainTextElement)
+        bodyStyle = computedStyle.fontStyle
+        bodyWeight = computedStyle.fontWeight
+        bodySize = computedStyle.fontSize
+        bodyLineHeight = computedStyle.lineHeight
+      }
+    }
+
+    return {
+      heading: {
+        family: headingFontFamily || 'Not found',
+      },
+      body: {
+        family: bodyFontFamily || 'Not found',
+        style: bodyStyle || 'normal',
+        weight: bodyWeight || '400',
+        size: bodySize || '16px',
+        lineHeight: bodyLineHeight || '24px',
+      },
+    }
+  } catch (error) {
+    console.error('Error in analyzeFonts:', error)
+    // Return fallback data
+    return {
+      heading: { family: 'Error analyzing' },
+      body: {
+        family: 'Error analyzing',
+        style: 'normal',
+        weight: '400',
+        size: '16px',
+        lineHeight: '24px',
+      },
+    }
   }
 }
 
 // Analyze colors on the page
 async function analyzeColors() {
-  const allColors = []
-  const backgroundColors = []
-  const textColors = []
-  const borderColors = []
+  try {
+    const allColors = []
+    const backgroundColors = []
+    const textColors = []
+    const borderColors = []
 
-  // Get all elements
-  const elements = document.querySelectorAll('*')
+    // Get all elements
+    const elements = document.querySelectorAll('*')
 
-  elements.forEach((element) => {
-    const computedStyle = window.getComputedStyle(element)
+    elements.forEach((element) => {
+      const computedStyle = window.getComputedStyle(element)
 
-    // Get background color
-    const bgColor = computedStyle.backgroundColor
-    if (
-      bgColor &&
-      bgColor !== 'rgba(0, 0, 0, 0)' &&
-      bgColor !== 'transparent'
-    ) {
-      backgroundColors.push(bgColor)
-      allColors.push(bgColor)
+      // Get background color
+      const bgColor = computedStyle.backgroundColor
+      if (
+        bgColor &&
+        bgColor !== 'rgba(0, 0, 0, 0)' &&
+        bgColor !== 'transparent'
+      ) {
+        backgroundColors.push(bgColor)
+        allColors.push(bgColor)
+      }
+
+      // Get text color
+      const textColor = computedStyle.color
+      if (textColor) {
+        textColors.push(textColor)
+        allColors.push(textColor)
+      }
+
+      // Get border color
+      const borderColor = computedStyle.borderColor
+      if (
+        borderColor &&
+        borderColor !== 'rgba(0, 0, 0, 0)' &&
+        borderColor !== 'transparent'
+      ) {
+        borderColors.push(borderColor)
+        allColors.push(borderColor)
+      }
+    })
+
+    // Return unique colors
+    return {
+      all: allColors,
+      background: backgroundColors,
+      text: textColors,
+      border: borderColors,
     }
-
-    // Get text color
-    const textColor = computedStyle.color
-    if (textColor) {
-      textColors.push(textColor)
-      allColors.push(textColor)
+  } catch (error) {
+    console.error('Error in analyzeColors:', error)
+    // Return fallback data
+    return {
+      all: [],
+      background: [],
+      text: [],
+      border: [],
     }
-
-    // Get border color
-    const borderColor = computedStyle.borderColor
-    if (
-      borderColor &&
-      borderColor !== 'rgba(0, 0, 0, 0)' &&
-      borderColor !== 'transparent'
-    ) {
-      borderColors.push(borderColor)
-      allColors.push(borderColor)
-    }
-  })
-
-  // Return unique colors
-  return {
-    all: allColors,
-    background: backgroundColors,
-    text: textColors,
-    border: borderColors,
   }
 }
-
-// Add styles for picker
-const style = document.createElement('style')
-style.textContent = `
-.picker-active {
-  cursor: crosshair !important;
-}
-
-.picker-active * {
-  cursor: crosshair !important;
-}
-`
-document.head.appendChild(style)
