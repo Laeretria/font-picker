@@ -3,7 +3,7 @@
   "name": "Font & Color Inspector",
   "version": "1.0",
   "description": "Inspect font and color properties of webpage elements",
-  "permissions": ["activeTab", "scripting", "notifications"],
+  "permissions": ["activeTab", "scripting", "storage", "tabs"],
   "action": {
     "default_popup": "popup/popup.html",
     "default_icon": {

@@ -1,5 +1,8 @@
-// Modified popup.js that includes minimizer functionality
+// Modified popup.js that includes minimizer functionality and element picker persistence
 document.addEventListener('DOMContentLoaded', function () {
+  // Notify background script that popup has opened
+  chrome.runtime.sendMessage({ action: 'popupOpened' })
+
   // Grab DOM elements for minimizer functionality
   const appContainer = document.querySelector('.app-container')
   const sidebar = document.querySelector('.sidebar')
@@ -12,6 +15,48 @@ document.addEventListener('DOMContentLoaded', function () {
   let pickerActive = false
 
   console.log('Popup initialized')
+  // Helper function to safely get data
+  function safelyGetData(keys, callback) {
+    try {
+      if (chrome.storage && chrome.storage.local) {
+        chrome.storage.local.get(keys, callback)
+      } else {
+        // Fallback to localStorage
+        const result = {}
+        keys.forEach((key) => {
+          try {
+            const value = localStorage.getItem(key)
+            if (value) {
+              result[key] = JSON.parse(value)
+            }
+          } catch (e) {
+            console.error('Error reading from localStorage:', e)
+          }
+        })
+        callback(result)
+      }
+    } catch (error) {
+      console.error('Error getting data:', error)
+      callback({})
+    }
+  }
+
+  // Helper function to safely store data
+  function safelyStoreData(key, value) {
+    try {
+      // Always save to localStorage
+      localStorage.setItem(key, JSON.stringify(value))
+
+      // If chrome.storage is available, save there too
+      if (chrome.storage && chrome.storage.local) {
+        chrome.storage.local.set({ [key]: value }, function () {
+          console.log('Data saved to chrome.storage:', key)
+        })
+      }
+    } catch (error) {
+      console.error('Storage error:', error)
+    }
+  }
 
   // Function to adjust sidebar height when minimizing/maximizing
   function adjustSidebarHeight() {
@@ -284,6 +329,9 @@ document.addEventListener('DOMContentLoaded', function () {
           elementPickerBtn.textContent = pickerActive
             ? 'Cancel Selection'
             : 'Pick Element'
+
+          // The popup will close when user clicks on the page
+          // But background script will reopen it after element selection
         } else {
           console.error('Unable to find active tab')
         }
@@ -327,12 +375,13 @@ document.addEventListener('DOMContentLoaded', function () {
     }
   })
 
-  // Listen for messages from content script
+  // Listen for messages from content script and background script
   chrome.runtime.onMessage.addListener(function (
     request,
     sender,
     sendResponse
   ) {
+    // Handle element selection (this might come from content script or background)
     if (request.action === 'elementSelected') {
       console.log('Element selected message received:', request)
 
@@ -360,6 +409,27 @@ document.addEventListener('DOMContentLoaded', function () {
         elementPickerBtn.textContent = 'Pick Element'
       }
 
+      // Focus on font tab after element selection
+      const fontNavItem = document.querySelector('.nav-item[data-tab="font"]')
+      if (fontNavItem) {
+        fontNavItem.click()
+      }
+
+      // Save the data to localStorage
+      if (request.fontData) {
+        localStorage.setItem(
+          'selectedElementFontData',
+          JSON.stringify(request.fontData)
+        )
+      }
+
+      if (request.colorData) {
+        localStorage.setItem(
+          'selectedElementColorData',
+          JSON.stringify(request.colorData)
+        )
+      }
+
       if (request.fontData && fontTab) {
         try {
           fontTab.updateSelectedElementFontData(request.fontData)
@@ -375,7 +445,62 @@ document.addEventListener('DOMContentLoaded', function () {
           console.error('Error updating color data:', error)
         }
       }
+
+      sendResponse({ status: 'ok', dataUpdated: true })
+      return true
     }
+
+    // Handle loadSelectedElement message from background script
+    if (request.action === 'loadSelectedElement') {
+      console.log('Popup received loadSelectedElement message:', request)
+
+      // Focus on font tab
+      const fontNavItem = document.querySelector('.nav-item[data-tab="font"]')
+      if (fontNavItem) {
+        fontNavItem.click()
+      }
+
+      // Handle font data
+      if (request.fontData) {
+        // Save to localStorage
+        localStorage.setItem(
+          'selectedElementFontData',
+          JSON.stringify(request.fontData)
+        )
+
+        // Update UI if fontTab is initialized
+        if (fontTab) {
+          try {
+            fontTab.updateSelectedElementFontData(request.fontData)
+          } catch (error) {
+            console.error('Error updating font data:', error)
+          }
+        }
+      }
+
+      // Handle color data
+      if (request.colorData) {
+        // Save to localStorage
+        localStorage.setItem(
+          'selectedElementColorData',
+          JSON.stringify(request.colorData)
+        )
+
+        // Update UI if colorsTab is initialized
+        if (colorsTab) {
+          try {
+            colorsTab.updateSelectedElementColorData(request.colorData)
+          } catch (error) {
+            console.error('Error updating color data:', error)
+          }
+        }
+      }
+
+      sendResponse({ status: 'ok' })
+      return true
+    }
+
+    // Ensure proper sizing
     if (appContainer) {
       appContainer.style.height = '550px'
       appContainer.style.overflowX = 'hidden'
@@ -387,5 +512,50 @@ document.addEventListener('DOMContentLoaded', function () {
       mainContent.style.overflowX = 'hidden'
     }
     return true // Keep the message channel open for async response
+  })
+
+  // Try to load the most recent element data
+  safelyGetData(
+    ['selectedElementFontData', 'selectedElementColorData'],
+    function (data) {
+      // Load font data if available
+      if (data.selectedElementFontData) {
+        localStorage.setItem(
+          'selectedElementFontData',
+          JSON.stringify(data.selectedElementFontData)
+        )
+
+        if (fontTab) {
+          try {
+            fontTab.updateSelectedElementFontData(data.selectedElementFontData)
+          } catch (error) {
+            console.error('Error updating font data:', error)
+          }
+        }
+      }
+
+      // Load color data if available
+      if (data.selectedElementColorData) {
+        localStorage.setItem(
+          'selectedElementColorData',
+          JSON.stringify(data.selectedElementColorData)
+        )
+
+        if (colorsTab) {
+          try {
+            colorsTab.updateSelectedElementColorData(
+              data.selectedElementColorData
+            )
+          } catch (error) {
+            console.error('Error updating color data:', error)
+          }
+        }
+      }
+    }
+  )
+
+  // Add this to notify when popup is closing/being unloaded
+  window.addEventListener('beforeunload', function () {
+    chrome.runtime.sendMessage({ action: 'popupClosed' })
   })
 })

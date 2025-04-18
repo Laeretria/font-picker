@@ -196,15 +196,81 @@ function selectElement(e) {
       (element.textContent.length > 20 ? '...' : ''),
   }
 
-  // Send data to popup
-  chrome.runtime.sendMessage({
-    action: 'elementSelected',
-    fontData: fontData,
-    colorData: colorData,
-  })
+  console.log(
+    'Element selected:',
+    element.tagName,
+    'with font family:',
+    fontData.family
+  )
 
-  // Deactivate picker
-  toggleElementPicker()
+  // Try multiple approaches to ensure data is captured
+  try {
+    // 1. First try sending to background script
+    chrome.runtime.sendMessage(
+      {
+        action: 'elementSelected',
+        fontData: fontData,
+        colorData: colorData,
+        reopenPopup: true, // Signal to reopen the popup
+      },
+      function (response) {
+        if (chrome.runtime.lastError) {
+          console.error(
+            'Error sending to background:',
+            chrome.runtime.lastError
+          )
+
+          // 2. Fallback: Try alerting the user
+          try {
+            // Create a floating message that element was selected
+            const message = document.createElement('div')
+            message.textContent =
+              'Element selected! Click the extension icon to see details.'
+            message.style.position = 'fixed'
+            message.style.top = '20px'
+            message.style.left = '50%'
+            message.style.transform = 'translateX(-50%)'
+            message.style.backgroundColor = 'rgba(0, 123, 255, 0.9)'
+            message.style.color = 'white'
+            message.style.padding = '10px 20px'
+            message.style.borderRadius = '4px'
+            message.style.zIndex = '9999999'
+            message.style.fontSize = '14px'
+            message.style.fontFamily = 'Arial, sans-serif'
+
+            document.body.appendChild(message)
+
+            // Remove after 5 seconds
+            setTimeout(() => {
+              if (message.parentNode) {
+                message.parentNode.removeChild(message)
+              }
+            }, 5000)
+          } catch (err) {
+            console.error('Error showing message:', err)
+          }
+        } else {
+          console.log('Element data sent successfully')
+        }
+      }
+    )
+  } catch (error) {
+    console.error('Error in element selection:', error)
+  }
+
+  // Deactivate picker mode
+  pickerActive = false
+  document.removeEventListener('mouseover', highlightElement)
+  document.removeEventListener('click', selectElement)
+  document.removeEventListener('keydown', cancelPicker)
+  document.body.classList.remove('picker-active')
+  removeHighlight()
+
+  // Remove the indicator
+  const indicator = document.getElementById('element-picker-indicator')
+  if (indicator) {
+    indicator.remove()
+  }
 }
 
 // Cancel picker on ESC key
