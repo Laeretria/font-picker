@@ -430,9 +430,16 @@ async function analyzeColors() {
 
       // Get text color
       const textColor = computedStyle.color
-      if (textColor) {
-        textColors.push(textColor)
-        allColors.push(textColor)
+      if (
+        textColor &&
+        textColor !== 'rgba(0, 0, 0, 0)' &&
+        textColor !== 'transparent'
+      ) {
+        // Only add non-empty, visible text colors
+        if (element.innerText && element.innerText.trim().length > 0) {
+          textColors.push(textColor)
+          allColors.push(textColor)
+        }
       }
 
       // Get border color
