@@ -14,17 +14,17 @@
 
 @font-face {
   font-family: 'Regola-Bold';
-  src: url('assets/fonts/RegolaPro-Bold.ttf');
+  src: url('/assets/fonts/RegolaPro-Bold.ttf');
 }
 
 @font-face {
   font-family: 'Regola-Medium';
-  src: url('assets/fonts/RegolaPro-Medium.ttf');
+  src: url('/assets/fonts/RegolaPro-Medium.ttf');
 }
 
 @font-face {
   font-family: 'Regola-Regular';
-  src: url('assets/fonts/RegolaPro-Regular.ttf');
+  src: url('/assets/fonts/RegolaPro-Regular.ttf');
 }
 
 /* Reset and Global Styles */
