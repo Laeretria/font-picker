@@ -178,7 +178,11 @@ function selectElement(e) {
     style: computedStyle.fontStyle,
     weight: computedStyle.fontWeight,
     size: computedStyle.fontSize,
-    lineHeight: computedStyle.lineHeight,
+    lineHeight: computedStyle.lineHeight.includes('.')
+      ? computedStyle.lineHeight.replace(/(\d+)\.(\d+).*/, '$1px')
+      : computedStyle.lineHeight.match(/\d+/)
+      ? computedStyle.lineHeight.match(/\d+/)[0] + 'px'
+      : computedStyle.lineHeight,
     element: element.tagName.toLowerCase(),
     text:
       element.textContent.slice(0, 20) +
@@ -371,7 +375,11 @@ async function analyzeFonts() {
         bodyStyle = computedStyle.fontStyle
         bodyWeight = computedStyle.fontWeight
         bodySize = computedStyle.fontSize
-        bodyLineHeight = computedStyle.lineHeight
+        bodyLineHeight = computedStyle.lineHeight.includes('.')
+          ? computedStyle.lineHeight.replace(/(\d+)\.(\d+).*/, '$1px')
+          : computedStyle.lineHeight.match(/\d+/)
+          ? computedStyle.lineHeight.match(/\d+/)[0] + 'px'
+          : computedStyle.lineHeight
       }
     }
 

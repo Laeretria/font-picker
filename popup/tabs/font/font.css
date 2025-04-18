@@ -27,6 +27,14 @@
   color: var(--title-color);
 }
 
+.font-card-header svg {
+  width: 34px !important;
+  height: 34px !important;
+  background-color: var(--background-color);
+  border-radius: 6px;
+  padding: 8px;
+}
+
 .font-card {
   background: var(--white);
   border: 1px solid var(--border-color);
@@ -93,24 +101,63 @@
   background-color: var(--secondary-color);
 }
 
-/* Font formats */
-.font-formats {
-  display: flex;
-  gap: 8px;
+/* Add these styles to your tabs/font/font.css file */
+
+.css-snippet-container {
+  width: 100%;
+  position: relative;
+  margin-bottom: 10px;
 }
 
-.format-option {
-  padding: 6px 12px;
-  border: 1px solid var(--border-color);
+.css-code {
+  background-color: #f5f5f5;
+  border-radius: 4px;
+  padding: 10px;
+  font-family: monospace;
+  font-size: 12px;
+  white-space: pre-wrap;
+  margin: 0;
+  max-height: 150px;
+  overflow-y: auto;
+  border: 1px solid #ddd;
+  color: #333;
+}
+
+.copy-snippet-btn {
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  background-color: var(--primary-color, #4a6cf7);
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 3px 8px;
+  font-size: 11px;
+  cursor: pointer;
+  opacity: 0.8;
+  transition: opacity 0.2s;
+}
+
+.copy-snippet-btn:hover {
+  opacity: 1;
+}
+
+.snippet-format-options {
+  display: flex;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.snippet-format-options .format-option {
+  padding: 3px 10px;
+  background-color: #eee;
   border-radius: 4px;
   cursor: pointer;
   font-size: 12px;
-  transition: all 0.3s;
+  transition: background-color 0.2s;
 }
 
-.format-option:hover,
-.format-option.active {
-  background-color: var(--primary-color);
-  color: var(--white);
-  border-color: var(--primary-color);
+.snippet-format-options .format-option.active {
+  background-color: var(--primary-color, #4a6cf7);
+  color: white;
 }

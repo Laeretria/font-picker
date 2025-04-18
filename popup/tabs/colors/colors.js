@@ -183,6 +183,7 @@ class ColorsTab {
     this.colorWheelElement.appendChild(svg)
   }
 
+  // Update the updateColorList method to pass the DOM element to copyToClipboard
   updateColorList(container, colors) {
     container.innerHTML = ''
 
@@ -220,7 +221,7 @@ class ColorsTab {
 
       // Add click event to copy color code
       colorItem.addEventListener('click', () => {
-        this.copyToClipboard(this.formatColor(color))
+        this.copyToClipboard(this.formatColor(color), colorItem)
       })
 
       container.appendChild(colorItem)
@@ -335,31 +336,64 @@ class ColorsTab {
     return `hsla(${h}, ${s}%, ${l}%, ${a})`
   }
 
-  copyToClipboard(text) {
+  copyToClipboard(text, element) {
     navigator.clipboard
       .writeText(text)
       .then(() => {
-        // Show a temporary success message
-        const message = document.createElement('div')
-        message.textContent = 'Copied!'
-        message.className = 'copy-tooltip'
-
-        // Position near the mouse
-        const x = event.clientX + 10
-        const y = event.clientY - 10
-        message.style.left = `${x}px`
-        message.style.top = `${y}px`
-
-        document.body.appendChild(message)
-
-        // Remove after 1.5 seconds
-        setTimeout(() => {
-          document.body.removeChild(message)
-        }, 1500)
+        // Show check mark animation on the color box element
+        this.showCheckMarkAnimation(element)
       })
       .catch((err) => {
         console.error('Could not copy text: ', err)
       })
+  }
+  showCheckMarkAnimation(element) {
+    // Find the color box inside the color item
+    const colorBox = element.querySelector('.color-box')
+
+    if (!colorBox) return
+
+    // Create check mark overlay
+    const checkMarkOverlay = document.createElement('div')
+    checkMarkOverlay.className = 'check-mark-overlay'
+
+    // Create SVG check mark icon
+    const checkSvg = document.createElementNS(
+      'http://www.w3.org/2000/svg',
+      'svg'
+    )
+    checkSvg.setAttribute('viewBox', '0 0 24 24')
+    checkSvg.setAttribute('width', '16')
+    checkSvg.setAttribute('height', '16')
+    checkSvg.setAttribute('stroke', 'currentColor')
+    checkSvg.setAttribute('stroke-width', '3')
+    checkSvg.setAttribute('stroke-linecap', 'round')
+    checkSvg.setAttribute('stroke-linejoin', 'round')
+    checkSvg.setAttribute('fill', 'none')
+    checkSvg.classList.add('check-icon')
+
+    // Create check mark path
+    const path = document.createElementNS('http://www.w3.org/2000/svg', 'path')
+    path.setAttribute('d', 'M20 6L9 17l-5-5')
+    checkSvg.appendChild(path)
+
+    // Add check mark to overlay
+    checkMarkOverlay.appendChild(checkSvg)
+
+    // Add the overlay to the color box
+    colorBox.style.position = 'relative'
+    colorBox.appendChild(checkMarkOverlay)
+
+    // Remove after animation completes
+    setTimeout(() => {
+      try {
+        if (colorBox.contains(checkMarkOverlay)) {
+          colorBox.removeChild(checkMarkOverlay)
+        }
+      } catch (e) {
+        console.error('Error removing check mark overlay:', e)
+      }
+    }, 1500)
   }
 
   updateSelectedElementColorData(colorData) {
