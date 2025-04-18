@@ -104,7 +104,7 @@ document.addEventListener('DOMContentLoaded', function () {
     if (!favicon) {
       favicon = document.createElement('img')
       favicon.className = 'minimized-favicon'
-      favicon.src = 'assets/icon-32.png' // Update this path to your actual favicon
+      favicon.src = '/assets/icons/icon32.png' // Update this path to your actual favicon
       sidebar.querySelector('.sidebar-header').appendChild(favicon)
     }
   }
@@ -375,6 +375,16 @@ document.addEventListener('DOMContentLoaded', function () {
           console.error('Error updating color data:', error)
         }
       }
+    }
+    if (appContainer) {
+      appContainer.style.height = '550px'
+      appContainer.style.overflowX = 'hidden'
+    }
+
+    // Ensure main content doesn't overflow
+    const mainContent = document.querySelector('.main-content')
+    if (mainContent) {
+      mainContent.style.overflowX = 'hidden'
     }
     return true // Keep the message channel open for async response
   })
