@@ -1,4 +1,4 @@
-// FIXED popup.js that preserves flex and gap layouts
+// FIXED popup.js that preserves flex and gap layouts and refreshes data on open
 document.addEventListener('DOMContentLoaded', function () {
   // Initialize variables
   let fontTab = null
@@ -83,30 +83,41 @@ document.addEventListener('DOMContentLoaded', function () {
     })
   }
 
-  // Initialize the default active tab
-  const activeNavItem = document.querySelector('.nav-item.active')
-  if (activeNavItem) {
-    const activeTabId = activeNavItem.getAttribute('data-tab')
-    console.log('Default active tab:', activeTabId)
+  // Always refresh data on popup open, regardless of if tabs were previously initialized
+  chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
+    if (tabs && tabs[0] && tabs[0].id) {
+      // Initialize the default active tab
+      const activeNavItem = document.querySelector('.nav-item.active')
+      if (activeNavItem) {
+        const activeTabId = activeNavItem.getAttribute('data-tab')
+        console.log('Default active tab:', activeTabId)
 
-    try {
-      if (activeTabId === 'font') {
-        if (typeof FontTab !== 'undefined') {
-          fontTab = new FontTab()
-        } else {
-          console.error('FontTab class is not defined!')
-        }
-      } else if (activeTabId === 'colors') {
-        if (typeof ColorsTab !== 'undefined') {
-          colorsTab = new ColorsTab()
-        } else {
-          console.error('ColorsTab class is not defined!')
+        try {
+          if (activeTabId === 'font') {
+            console.log('Initializing FontTab on popup open')
+            if (typeof FontTab !== 'undefined') {
+              // Always create a new instance to get fresh data
+              fontTab = new FontTab()
+            } else {
+              console.error('FontTab class is not defined!')
+            }
+          } else if (activeTabId === 'colors') {
+            console.log('Initializing ColorsTab on popup open')
+            if (typeof ColorsTab !== 'undefined') {
+              // Always create a new instance to get fresh data
+              colorsTab = new ColorsTab()
+            } else {
+              console.error('ColorsTab class is not defined!')
+            }
+          }
+        } catch (error) {
+          console.error('Error initializing default tab:', error)
         }
       }
-    } catch (error) {
-      console.error('Error initializing default tab:', error)
+    } else {
+      console.error('Unable to find active tab')
     }
-  }
+  })
 
   // Listen for messages from content script
   chrome.runtime.onMessage.addListener(function (
