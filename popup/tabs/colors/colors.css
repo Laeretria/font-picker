@@ -142,7 +142,7 @@
 
 /* Add these styles to your popup.css file */
 
-/* Check mark overlay */
+/* ===== Check Mark Animation Styles ===== */
 .check-mark-overlay {
   position: absolute;
   top: 0;
@@ -158,13 +158,11 @@
   z-index: 10;
 }
 
-/* Check mark icon styles */
 .check-icon {
   color: white;
   animation: checkScale 0.3s ease-out;
 }
 
-/* Keyframes for fading in and out */
 @keyframes fadeInOut {
   0% {
     opacity: 0;
@@ -180,7 +178,6 @@
   }
 }
 
-/* Keyframes for check mark scale animation */
 @keyframes checkScale {
   0% {
     transform: scale(0);
@@ -193,7 +190,81 @@
   }
 }
 
+/* Updated Toast Notification Styles to stay at bottom while scrolling */
+#toast-container {
+  position: sticky; /* Use sticky positioning to keep visible during scroll */
+  bottom: 20px; /* Distance from bottom */
+  left: 0; /* Start from left edge */
+  width: 100%; /* Take full width of container */
+  margin-top: 20px; /* Add space above */
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  align-items: center; /* Center the toasts horizontally */
+  justify-content: flex-end; /* Align to bottom */
+  pointer-events: none; /* Container shouldn't block clicks */
+}
+
+.material-toast {
+  display: flex;
+  align-items: center;
+  padding: 8px 12px;
+  background-color: rgba(50, 50, 50, 0.9);
+  color: white;
+  border-radius: 4px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+  pointer-events: auto;
+  transform: translateY(40px);
+  opacity: 0;
+  transition: transform 0.3s ease, opacity 0.3s ease;
+  white-space: nowrap;
+  max-width: none;
+  width: auto;
+  margin-bottom: 10px; /* Space between toasts if multiple */
+}
+
+.toast-visible {
+  transform: translateY(0);
+  opacity: 1;
+}
+
+.toast-hiding {
+  transform: translateY(10px);
+  opacity: 0;
+}
+
+.toast-color-preview {
+  width: 16px;
+  height: 16px;
+  min-width: 16px;
+  border-radius: 2px;
+  margin-right: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  flex-shrink: 0;
+}
+
+.toast-message {
+  font-size: 13px;
+  white-space: nowrap;
+  font-family: 'Regola-Regular';
+}
+
+/* Alternative fixed approach if sticky doesn't work as expected */
+.color-list-container {
+  position: relative; /* Create positioning context */
+}
+
+/* Improve the hover effect on color items */
+.color-item {
+  transition: transform 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+}
+
+.color-item:hover {
+  transform: translateY(-2px);
+}
+
 /* Make sure color boxes have proper positioning context */
 .color-box {
+  position: relative;
   overflow: hidden;
 }

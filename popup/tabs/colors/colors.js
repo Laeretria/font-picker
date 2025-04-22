@@ -336,12 +336,30 @@ class ColorsTab {
     return `hsla(${h}, ${s}%, ${l}%, ${a})`
   }
 
+  hexToRgb(colorStr) {
+    // If it's already RGB or RGBA, return as is
+    if (colorStr.startsWith('rgb')) {
+      return colorStr
+    }
+
+    // If it's a valid hex code, return as is
+    if (colorStr.startsWith('#')) {
+      return colorStr
+    }
+
+    // Default fallback
+    return colorStr
+  }
+
   copyToClipboard(text, element) {
     navigator.clipboard
       .writeText(text)
       .then(() => {
         // Show check mark animation on the color box element
         this.showCheckMarkAnimation(element)
+
+        // Also show the toast notification
+        this.showToastNotification(text)
       })
       .catch((err) => {
         console.error('Could not copy text: ', err)
@@ -394,6 +412,139 @@ class ColorsTab {
         console.error('Error removing check mark overlay:', e)
       }
     }, 1500)
+  }
+
+  /**
+   * This solution creates a floating toast that always appears at the bottom of the main content area,
+   * regardless of scrolling position. This is the most reliable approach.
+   */
+
+  // Add this method to your ColorsTab class
+  showToastNotification(colorText) {
+    try {
+      // Get the main content element
+      const mainContent = document.querySelector('.main-content')
+
+      if (!mainContent) {
+        console.error('Could not find main-content div')
+        return
+      }
+
+      // Create a fixed position toast container if it doesn't exist
+      let toastContainer = document.getElementById('toast-container')
+
+      if (!toastContainer) {
+        toastContainer = document.createElement('div')
+        toastContainer.id = 'toast-container'
+
+        // Style the container for fixed positioning
+        toastContainer.style.position = 'fixed'
+        toastContainer.style.zIndex = '9999'
+        toastContainer.style.display = 'flex'
+        toastContainer.style.flexDirection = 'column'
+        toastContainer.style.alignItems = 'center'
+        toastContainer.style.pointerEvents = 'none'
+
+        document.body.appendChild(toastContainer)
+      }
+
+      // Position the toast at the bottom center of the main content area
+      const updateToastPosition = () => {
+        const rect = mainContent.getBoundingClientRect()
+        toastContainer.style.bottom = '20px'
+        toastContainer.style.left = `${rect.left + rect.width / 2}px`
+        toastContainer.style.transform = 'translateX(-50%)'
+      }
+
+      // Set initial position
+      updateToastPosition()
+
+      // Update position on scroll (horizontal or vertical)
+      const scrollHandler = () => {
+        updateToastPosition()
+      }
+
+      // Add scroll event listener
+      window.addEventListener('scroll', scrollHandler, { passive: true })
+
+      // Create toast element
+      const toast = document.createElement('div')
+      toast.className = 'material-toast'
+
+      // Style the toast element
+      toast.style.display = 'flex'
+      toast.style.alignItems = 'center'
+      toast.style.padding = '8px 12px'
+      toast.style.backgroundColor = 'rgba(50, 50, 50, 0.9)'
+      toast.style.color = 'white'
+      toast.style.borderRadius = '4px'
+      toast.style.boxShadow = '0 2px 10px rgba(0, 0, 0, 0.2)'
+      toast.style.pointerEvents = 'auto'
+      toast.style.transform = 'translateY(40px)'
+      toast.style.opacity = '0'
+      toast.style.transition = 'transform 0.3s ease, opacity 0.3s ease'
+      toast.style.whiteSpace = 'nowrap'
+      toast.style.marginBottom = '10px'
+
+      // Create color preview
+      const colorPreview = document.createElement('div')
+      colorPreview.className = 'toast-color-preview'
+
+      // Style the color preview
+      colorPreview.style.width = '16px'
+      colorPreview.style.height = '16px'
+      colorPreview.style.minWidth = '16px'
+      colorPreview.style.borderRadius = '2px'
+      colorPreview.style.marginRight = '10px'
+      colorPreview.style.border = '1px solid rgba(255, 255, 255, 0.2)'
+      colorPreview.style.flexShrink = '0'
+      colorPreview.style.backgroundColor = colorText
+
+      // Create message text
+      const message = document.createElement('span')
+      message.textContent = `${colorText} gekopieerd`
+      message.className = 'toast-message'
+
+      // Style the message
+      message.style.fontSize = '13px'
+      message.style.whiteSpace = 'nowrap'
+      message.style.fontFamily = 'Regola-Regular, sans-serif'
+
+      // Add elements to toast
+      toast.appendChild(colorPreview)
+      toast.appendChild(message)
+
+      // Add to container
+      toastContainer.appendChild(toast)
+
+      // Trigger animation
+      setTimeout(() => {
+        toast.style.transform = 'translateY(0)'
+        toast.style.opacity = '1'
+      }, 10)
+
+      // Auto-dismiss after 2 seconds
+      setTimeout(() => {
+        toast.style.transform = 'translateY(10px)'
+        toast.style.opacity = '0'
+
+        setTimeout(() => {
+          if (toastContainer && toast && toastContainer.contains(toast)) {
+            toastContainer.removeChild(toast)
+
+            // Remove scroll listener
+            window.removeEventListener('scroll', scrollHandler)
+
+            // Remove container if empty
+            if (toastContainer.children.length === 0) {
+              document.body.removeChild(toastContainer)
+            }
+          }
+        }, 300)
+      }, 2000)
+    } catch (error) {
+      console.error('Error showing toast notification:', error)
+    }
   }
 
   updateSelectedElementColorData(colorData) {
