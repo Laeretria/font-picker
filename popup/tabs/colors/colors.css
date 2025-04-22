@@ -268,3 +268,18 @@
   position: relative;
   overflow: hidden;
 }
+
+/* Center the format selector */
+.color-format-selector {
+  display: flex;
+  justify-content: center;
+  margin: 10px auto 20px;
+}
+
+/* Style for the explanation text */
+.color-wheel-hint {
+  text-align: center;
+  font-size: 12px;
+  color: #666;
+  margin: 10px 0 5px;
+}

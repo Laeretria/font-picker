@@ -41,6 +41,30 @@ class ColorsTab {
           if (this.colorsData) {
             this.updateColorUI(this.colorsData)
           }
+
+          // Update the indicator text format if it exists
+          if (this.colorsData && this.colorsData.all.length > 0) {
+            const colorFrequency = {}
+            this.colorsData.all.forEach((color) => {
+              if (color && color !== 'transparent') {
+                colorFrequency[color] = (colorFrequency[color] || 0) + 1
+              }
+            })
+
+            const uniqueColors = this.getUniqueColors(this.colorsData.all)
+            const sortedColors = [...uniqueColors].sort(
+              (a, b) => colorFrequency[b] - colorFrequency[a]
+            )
+
+            if (sortedColors.length > 0) {
+              const indicatorText = document.getElementById(
+                'color-indicator-text'
+              )
+              if (indicatorText) {
+                indicatorText.textContent = this.formatColor(sortedColors[0])
+              }
+            }
+          }
         })
       })
     }
@@ -72,20 +96,6 @@ class ColorsTab {
     this.updateColorList(this.backgroundColorsElement, colorData.background)
     this.updateColorList(this.textColorsElement, colorData.text)
     this.updateColorList(this.borderColorsElement, colorData.border)
-
-    // Update stats if we have that element
-    if (document.getElementById('total-colors')) {
-      document.getElementById('total-colors').textContent =
-        this.getUniqueColors(colorData.all).length
-
-      document.getElementById('bg-colors').textContent = this.getUniqueColors(
-        colorData.background
-      ).length
-
-      document.getElementById('txt-colors').textContent = this.getUniqueColors(
-        colorData.text
-      ).length
-    }
   }
 
   getUniqueColors(colors) {
@@ -104,6 +114,19 @@ class ColorsTab {
     const uniqueColors = this.getUniqueColors(colors)
     const total = uniqueColors.length
 
+    // Count frequency of each color
+    const colorFrequency = {}
+    colors.forEach((color) => {
+      if (color && color !== 'transparent') {
+        colorFrequency[color] = (colorFrequency[color] || 0) + 1
+      }
+    })
+
+    // Sort colors by frequency (most used first)
+    const sortedColors = [...uniqueColors].sort(
+      (a, b) => colorFrequency[b] - colorFrequency[a]
+    )
+
     // Create pie slices for color wheel
     if (total > 0) {
       const centerX = 50
@@ -111,10 +134,11 @@ class ColorsTab {
       const radius = 40
       const innerRadius = 20
 
-      let startAngle = 0
+      let startAngle = -Math.PI / 2 // Start at the top (12 o'clock)
       const angleStep = (2 * Math.PI) / total
 
-      uniqueColors.forEach((color, index) => {
+      // Add the main color wheel slices
+      sortedColors.forEach((color, index) => {
         const endAngle = startAngle + angleStep
 
         // Calculate path
@@ -137,13 +161,13 @@ class ColorsTab {
         path.setAttribute(
           'd',
           `
-                    M ${startX1} ${startY1}
-                    L ${endX1} ${endY1}
-                    A ${radius} ${radius} 0 ${largeArcFlag} 1 ${startX2} ${startY2}
-                    L ${endX2} ${endY2}
-                    A ${innerRadius} ${innerRadius} 0 ${largeArcFlag} 0 ${startX1} ${startY1}
-                    Z
-                `
+            M ${startX1} ${startY1}
+            L ${endX1} ${endY1}
+            A ${radius} ${radius} 0 ${largeArcFlag} 1 ${startX2} ${startY2}
+            L ${endX2} ${endY2}
+            A ${innerRadius} ${innerRadius} 0 ${largeArcFlag} 0 ${startX1} ${startY1}
+            Z
+          `
         )
         path.setAttribute('fill', color)
         path.setAttribute('stroke', '#fff')
@@ -166,6 +190,60 @@ class ColorsTab {
 
         startAngle = endAngle
       })
+
+      // Add inverted L-shaped indicator for the most used color (at 12 o'clock)
+      if (sortedColors.length > 0) {
+        const mostUsedColor = sortedColors[0]
+
+        // Create an inverted L-shaped indicator group
+        const indicatorGroup = document.createElementNS(
+          'http://www.w3.org/2000/svg',
+          'g'
+        )
+        indicatorGroup.setAttribute('id', 'color-indicator')
+
+        // Horizontal line at the top
+        const horizontalLine = document.createElementNS(
+          'http://www.w3.org/2000/svg',
+          'line'
+        )
+        horizontalLine.setAttribute('x1', (centerX - 15).toString())
+        horizontalLine.setAttribute('y1', (centerY - radius - 10).toString())
+        horizontalLine.setAttribute('x2', centerX.toString())
+        horizontalLine.setAttribute('y2', (centerY - radius - 10).toString())
+        horizontalLine.setAttribute('stroke', '#000')
+        horizontalLine.setAttribute('stroke-width', '1')
+        indicatorGroup.appendChild(horizontalLine)
+
+        // Vertical line extending down from the left end of horizontal line
+        const verticalLine = document.createElementNS(
+          'http://www.w3.org/2000/svg',
+          'line'
+        )
+        verticalLine.setAttribute('x1', (centerX - 15).toString())
+        verticalLine.setAttribute('y1', (centerY - radius - 10).toString())
+        verticalLine.setAttribute('x2', (centerX - 15).toString())
+        verticalLine.setAttribute('y2', (centerY - radius + 5).toString())
+        verticalLine.setAttribute('stroke', '#000')
+        verticalLine.setAttribute('stroke-width', '1')
+        indicatorGroup.appendChild(verticalLine)
+
+        // Add color text label next to the horizontal line
+        const text = document.createElementNS(
+          'http://www.w3.org/2000/svg',
+          'text'
+        )
+        text.setAttribute('x', (centerX - 13).toString())
+        text.setAttribute('y', (centerY - radius - 6).toString())
+        text.setAttribute('text-anchor', 'start')
+        text.setAttribute('fill', '#000')
+        text.setAttribute('font-size', '4')
+        text.setAttribute('id', 'color-indicator-text')
+        text.textContent = this.formatColor(mostUsedColor)
+        indicatorGroup.appendChild(text)
+
+        svg.appendChild(indicatorGroup)
+      }
     } else {
       // No colors message
       const textElement = document.createElementNS(
@@ -183,7 +261,6 @@ class ColorsTab {
     this.colorWheelElement.appendChild(svg)
   }
 
-  // Update the updateColorList method to pass the DOM element to copyToClipboard
   updateColorList(container, colors) {
     container.innerHTML = ''
 
@@ -198,6 +275,9 @@ class ColorsTab {
       }
     })
 
+    // Sort colors by frequency (most used first)
+    uniqueColors.sort((a, b) => colorFrequency[b] - colorFrequency[a])
+
     // Create color items
     uniqueColors.forEach((color) => {
       const colorItem = document.createElement('div')
@@ -211,13 +291,8 @@ class ColorsTab {
       colorHex.className = 'color-hex'
       colorHex.textContent = this.formatColor(color)
 
-      const colorUsage = document.createElement('div')
-      colorUsage.className = 'color-usage'
-      colorUsage.textContent = `${colorFrequency[color]} uses`
-
       colorItem.appendChild(colorBox)
       colorItem.appendChild(colorHex)
-      colorItem.appendChild(colorUsage)
 
       // Add click event to copy color code
       colorItem.addEventListener('click', () => {
