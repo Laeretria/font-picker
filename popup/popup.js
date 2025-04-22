@@ -1,13 +1,7 @@
-// Modified popup.js that includes minimizer functionality and element picker persistence
+// Cleaned popup.js without minimizer functionality
 document.addEventListener('DOMContentLoaded', function () {
   // Notify background script that popup has opened
   chrome.runtime.sendMessage({ action: 'popupOpened' })
-
-  // Grab DOM elements for minimizer functionality
-  const appContainer = document.querySelector('.app-container')
-  const sidebar = document.querySelector('.sidebar')
-  const minimizeButton = document.getElementById('minimize-button')
-  const tabButtons = document.querySelectorAll('.nav-item')
 
   // Initialize variables
   let fontTab = null
@@ -57,193 +51,6 @@ document.addEventListener('DOMContentLoaded', function () {
       console.error('Storage error:', error)
     }
   }
-
-  // Function to adjust sidebar height when minimizing/maximizing
-  function adjustSidebarHeight() {
-    if (appContainer.classList.contains('minimized')) {
-      // Force the sidebar height to match your hardcoded CSS value
-      appContainer.style.height = '335px'
-      sidebar.style.width = '50px'
-
-      // Hide "Minimaliseer" text with opacity
-      const minimizeText = minimizeButton.querySelector('.minimize-text')
-      if (minimizeText) {
-        minimizeText.style.opacity = '0'
-        minimizeText.style.visibility = 'hidden'
-      }
-
-      // Hide the credits section with opacity
-      const credits = sidebar.querySelector('.credits')
-      if (credits) {
-        credits.style.opacity = '0'
-        credits.style.visibility = 'hidden'
-        // After transition completes, set display none
-        setTimeout(() => {
-          if (appContainer.classList.contains('minimized')) {
-            credits.style.display = 'none'
-          }
-        }, 300)
-      }
-
-      // Ensure tab text is hidden with opacity
-      const tabLabels = sidebar.querySelectorAll('.nav-item span')
-      tabLabels.forEach((span) => {
-        span.style.opacity = '0'
-        span.style.visibility = 'hidden'
-      })
-    } else {
-      // Reset styles when maximized
-      appContainer.style.height = '550px'
-      sidebar.style.height = '100%'
-      sidebar.style.width = '200px'
-
-      // Show the credits section
-      const credits = sidebar.querySelector('.credits')
-      if (credits) {
-        credits.style.display = 'flex'
-        // Small delay to allow display:flex to take effect before transition
-        setTimeout(() => {
-          credits.style.visibility = 'visible'
-          credits.style.opacity = '1'
-        }, 10)
-      }
-
-      // Show tab text and minimize text with opacity
-      const tabLabels = sidebar.querySelectorAll('.nav-item span')
-      tabLabels.forEach((span) => {
-        span.style.visibility = 'visible'
-        span.style.opacity = '1'
-      })
-
-      // Show "Minimaliseer" text with opacity
-      const minimizeText = minimizeButton.querySelector('.minimize-text')
-      if (minimizeText) {
-        minimizeText.style.visibility = 'visible'
-        minimizeText.style.opacity = '1'
-      }
-    }
-  }
-
-  // Apply minimized state or maximized state
-  function applyMinimizedState(isMinimized) {
-    // Toggle minimized class
-    if (isMinimized) {
-      appContainer.classList.add('minimized')
-    } else {
-      appContainer.classList.remove('minimized')
-    }
-
-    // Add favicon
-    addFaviconToHeader()
-
-    // Apply correct height
-    adjustSidebarHeight()
-  }
-
-  // Helper function to add favicon to the header when minimized
-  function addFaviconToHeader() {
-    // Check if favicon already exists
-    let favicon = document.querySelector('.minimized-favicon')
-
-    // If not, create it
-    if (!favicon) {
-      favicon = document.createElement('img')
-      favicon.className = 'minimized-favicon'
-      favicon.src = '/assets/icons/icon32.png' // Update this path to your actual favicon
-      sidebar.querySelector('.sidebar-header').appendChild(favicon)
-    }
-  }
-
-  // Set up minimize button click event
-  if (minimizeButton) {
-    minimizeButton.addEventListener('click', function () {
-      const newMinimizedState = !appContainer.classList.contains('minimized')
-
-      // Update localStorage
-      localStorage.setItem('elementPickerMinimized', newMinimizedState)
-
-      // Handle title display directly (no opacity transition)
-      const title = sidebar.querySelector('.sidebar-title')
-      if (title) {
-        title.style.display = newMinimizedState ? 'none' : 'block'
-      }
-
-      // Toggle class immediately
-      if (newMinimizedState) {
-        appContainer.classList.add('minimized')
-      } else {
-        appContainer.classList.remove('minimized')
-      }
-
-      // Apply the state
-      applyMinimizedState(newMinimizedState)
-
-      // Toggle icon visibility
-      const minimizeIcon = minimizeButton.querySelector('.minimize-icon')
-      const maximizeIcon = minimizeButton.querySelector('.maximize-icon')
-
-      if (minimizeIcon && maximizeIcon) {
-        if (newMinimizedState) {
-          minimizeIcon.style.display = 'none'
-          maximizeIcon.style.display = 'block'
-        } else {
-          minimizeIcon.style.display = 'block'
-          maximizeIcon.style.display = 'none'
-        }
-      }
-    })
-  }
-
-  // Add click events to all tab buttons to maximize when minimized
-  tabButtons.forEach((tabButton) => {
-    tabButton.addEventListener('click', function () {
-      // If sidebar is minimized, expand it when clicking any tab
-      if (appContainer.classList.contains('minimized')) {
-        // Update localStorage
-        localStorage.setItem('elementPickerMinimized', false)
-
-        // Apply maximized state
-        applyMinimizedState(false)
-
-        // Toggle icon visibility manually
-        const minimizeIcon = minimizeButton.querySelector('.minimize-icon')
-        const maximizeIcon = minimizeButton.querySelector('.maximize-icon')
-
-        if (minimizeIcon && maximizeIcon) {
-          minimizeIcon.style.display = 'block'
-          maximizeIcon.style.display = 'none'
-        }
-      }
-    })
-  })
-
-  // Initialize state on page load
-  const isMinimized = localStorage.getItem('elementPickerMinimized') === 'true'
-  if (isMinimized) {
-    // Apply minimized state immediately
-    applyMinimizedState(true)
-
-    // Toggle icon visibility manually
-    const minimizeIcon = minimizeButton.querySelector('.minimize-icon')
-    const maximizeIcon = minimizeButton.querySelector('.maximize-icon')
-
-    if (minimizeIcon && maximizeIcon) {
-      minimizeIcon.style.display = 'none'
-      maximizeIcon.style.display = 'block'
-    }
-
-    // Also apply after a short delay to ensure everything is applied correctly
-    setTimeout(() => {
-      applyMinimizedState(true)
-    }, 100)
-  }
-
-  // Also adjust on window resize
-  window.addEventListener('resize', function () {
-    if (appContainer.classList.contains('minimized')) {
-      adjustSidebarHeight()
-    }
-  })
 
   // Tab switching functionality
   const navItems = document.querySelectorAll('.nav-item')
@@ -307,18 +114,12 @@ document.addEventListener('DOMContentLoaded', function () {
     })
   })
 
-  // Modified element picker functionality
+  // Element picker functionality
   const elementPickerBtn = document.getElementById('element-picker-btn')
   if (elementPickerBtn) {
     elementPickerBtn.addEventListener('click', function () {
       chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
         if (tabs && tabs[0] && tabs[0].id) {
-          // Instead of closing the popup, minimize it when activating the picker
-          if (!appContainer.classList.contains('minimized')) {
-            // Simulate a click on the minimize button
-            minimizeButton.click()
-          }
-
           // Toggle picker state
           pickerActive = !pickerActive
 
@@ -330,8 +131,10 @@ document.addEventListener('DOMContentLoaded', function () {
             ? 'Cancel Selection'
             : 'Pick Element'
 
-          // The popup will close when user clicks on the page
-          // But background script will reopen it after element selection
+          // Close the popup window when picker is activated
+          if (pickerActive) {
+            window.close()
+          }
         } else {
           console.error('Unable to find active tab')
         }
@@ -384,24 +187,6 @@ document.addEventListener('DOMContentLoaded', function () {
     // Handle element selection (this might come from content script or background)
     if (request.action === 'elementSelected') {
       console.log('Element selected message received:', request)
-
-      // Maximize the popup when element is selected
-      if (appContainer.classList.contains('minimized')) {
-        // Update localStorage
-        localStorage.setItem('elementPickerMinimized', false)
-
-        // Apply maximized state
-        applyMinimizedState(false)
-
-        // Toggle icon visibility manually
-        const minimizeIcon = minimizeButton.querySelector('.minimize-icon')
-        const maximizeIcon = minimizeButton.querySelector('.maximize-icon')
-
-        if (minimizeIcon && maximizeIcon) {
-          minimizeIcon.style.display = 'block'
-          maximizeIcon.style.display = 'none'
-        }
-      }
 
       // Reset picker status and button text
       pickerActive = false
@@ -501,9 +286,9 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     // Ensure proper sizing
-    if (appContainer) {
-      appContainer.style.height = '550px'
-      appContainer.style.overflowX = 'hidden'
+    if (document.querySelector('.app-container')) {
+      document.querySelector('.app-container').style.height = '550px'
+      document.querySelector('.app-container').style.overflowX = 'hidden'
     }
 
     // Ensure main content doesn't overflow
