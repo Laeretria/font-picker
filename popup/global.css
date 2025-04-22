@@ -423,3 +423,9 @@ h3 {
   display: flex;
   align-items: center; /* Vertically align with icon */
 }
+
+/*Font Tabs*/
+.tab-button span.label {
+  font-size: 15px;
+  font-family: 'Regola-Medium';
+}
