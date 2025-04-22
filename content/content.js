@@ -411,72 +411,318 @@ async function analyzeFonts() {
   }
 }
 
-// Analyze colors on the page
+// Analyze colors with support for animations and delayed content
 async function analyzeColors() {
   try {
-    const allColors = []
-    const backgroundColors = []
-    const textColors = []
-    const borderColors = []
+    // Store initial results
+    let results = await performColorAnalysis()
 
-    // Get all elements
-    const elements = document.querySelectorAll('*')
+    // Return initial results immediately
+    // But also schedule additional scans to catch animations and delayed content
+    scheduleFollowupScans(results)
 
-    elements.forEach((element) => {
-      const computedStyle = window.getComputedStyle(element)
-
-      // Get background color
-      const bgColor = computedStyle.backgroundColor
-      if (
-        bgColor &&
-        bgColor !== 'rgba(0, 0, 0, 0)' &&
-        bgColor !== 'transparent'
-      ) {
-        backgroundColors.push(bgColor)
-        allColors.push(bgColor)
-      }
-
-      // Get text color
-      const textColor = computedStyle.color
-      if (
-        textColor &&
-        textColor !== 'rgba(0, 0, 0, 0)' &&
-        textColor !== 'transparent'
-      ) {
-        // Only add non-empty, visible text colors
-        if (element.innerText && element.innerText.trim().length > 0) {
-          textColors.push(textColor)
-          allColors.push(textColor)
-        }
-      }
-
-      // Get border color
-      const borderColor = computedStyle.borderColor
-      if (
-        borderColor &&
-        borderColor !== 'rgba(0, 0, 0, 0)' &&
-        borderColor !== 'transparent'
-      ) {
-        borderColors.push(borderColor)
-        allColors.push(borderColor)
-      }
-    })
-
-    // Return unique colors
-    return {
-      all: allColors,
-      background: backgroundColors,
-      text: textColors,
-      border: borderColors,
-    }
+    return results
   } catch (error) {
     console.error('Error in analyzeColors:', error)
-    // Return fallback data
     return {
       all: [],
       background: [],
       text: [],
       border: [],
     }
+  }
+}
+
+// Main color analysis function
+async function performColorAnalysis() {
+  const allColors = []
+  const backgroundColors = []
+  const textColors = []
+  const borderColors = []
+
+  // Get all elements in the DOM
+  const elements = document.querySelectorAll('*')
+
+  // Process each element
+  elements.forEach((element) => {
+    // Skip elements without dimensions
+    const rect = element.getBoundingClientRect()
+    if (rect.width === 0 || rect.height === 0) {
+      return
+    }
+
+    // Get computed style
+    const computedStyle = window.getComputedStyle(element)
+
+    // Skip invisible elements
+    if (
+      computedStyle.display === 'none' ||
+      computedStyle.visibility === 'hidden' ||
+      parseFloat(computedStyle.opacity) <= 0.05
+    ) {
+      return
+    }
+
+    // 1. BACKGROUND COLOR
+    const bgColor = computedStyle.backgroundColor
+    if (
+      bgColor &&
+      bgColor !== 'rgba(0, 0, 0, 0)' &&
+      bgColor !== 'transparent'
+    ) {
+      // Only include if element has a reasonable size
+      const area = rect.width * rect.height
+      if (area >= 25) {
+        // At least 5x5 pixels
+        backgroundColors.push(bgColor)
+        allColors.push(bgColor)
+      }
+    }
+
+    // 2. TEXT COLOR
+    const textColor = computedStyle.color
+    if (
+      textColor &&
+      textColor !== 'rgba(0, 0, 0, 0)' &&
+      textColor !== 'transparent'
+    ) {
+      // Check if element has visible text content
+      const text = element.innerText || element.textContent
+      const hasText = text && text.trim().length > 0
+
+      // Check if text would be visible (non-zero font size)
+      const fontSize = parseFloat(computedStyle.fontSize)
+
+      if (hasText && fontSize > 0) {
+        textColors.push(textColor)
+        allColors.push(textColor)
+      }
+    }
+
+    // 3. BORDER COLOR
+    // Check each border side individually
+    ;[
+      {
+        color: computedStyle.borderTopColor,
+        width: parseFloat(computedStyle.borderTopWidth),
+        style: computedStyle.borderTopStyle,
+      },
+      {
+        color: computedStyle.borderRightColor,
+        width: parseFloat(computedStyle.borderRightWidth),
+        style: computedStyle.borderRightStyle,
+      },
+      {
+        color: computedStyle.borderBottomColor,
+        width: parseFloat(computedStyle.borderBottomWidth),
+        style: computedStyle.borderBottomStyle,
+      },
+      {
+        color: computedStyle.borderLeftColor,
+        width: parseFloat(computedStyle.borderLeftWidth),
+        style: computedStyle.borderLeftStyle,
+      },
+    ].forEach((border) => {
+      if (
+        border.color &&
+        border.color !== 'rgba(0, 0, 0, 0)' &&
+        border.color !== 'transparent' &&
+        border.width > 0 &&
+        border.style !== 'none'
+      ) {
+        borderColors.push(border.color)
+        allColors.push(border.color)
+      }
+    })
+  })
+
+  // Check major container elements too
+  const mainElements = [
+    document.body,
+    document.querySelector('main'),
+    document.querySelector('header'),
+    document.querySelector('footer'),
+    document.querySelector('.container'),
+    document.querySelector('#content'),
+  ].filter((el) => el !== null)
+
+  mainElements.forEach((element) => {
+    const style = window.getComputedStyle(element)
+
+    // Add main background colors
+    const bgColor = style.backgroundColor
+    if (
+      bgColor &&
+      bgColor !== 'rgba(0, 0, 0, 0)' &&
+      bgColor !== 'transparent'
+    ) {
+      backgroundColors.push(bgColor)
+      allColors.push(bgColor)
+    }
+
+    // Add main text colors
+    const textColor = style.color
+    if (
+      textColor &&
+      textColor !== 'rgba(0, 0, 0, 0)' &&
+      textColor !== 'transparent'
+    ) {
+      textColors.push(textColor)
+      allColors.push(textColor)
+    }
+  })
+
+  return {
+    all: allColors,
+    background: backgroundColors,
+    text: textColors,
+    border: borderColors,
+  }
+}
+
+// Schedule follow-up scans to catch animations and delayed content
+function scheduleFollowupScans(initialResults) {
+  // Common animation/transition durations to check after
+  const timings = [500, 1000, 2000]
+
+  // Scan after each timing
+  timings.forEach((timing) => {
+    setTimeout(async () => {
+      try {
+        // Perform another analysis
+        const newResults = await performColorAnalysis()
+
+        // Check if we found new colors
+        const hasNewColors = hasNewColorData(initialResults, newResults)
+
+        if (hasNewColors) {
+          // Merge the results
+          const mergedResults = mergeColorResults(initialResults, newResults)
+
+          // Send the updated results to the popup
+          chrome.runtime.sendMessage({
+            action: 'colorUpdateAvailable',
+            colors: mergedResults,
+          })
+
+          // Update our reference for future comparisons
+          initialResults = mergedResults
+        }
+      } catch (error) {
+        console.error(`Error in follow-up scan (${timing}ms):`, error)
+      }
+    }, timing)
+  })
+}
+
+// Check if new color data contains colors not in the original data
+function hasNewColorData(originalData, newData) {
+  // Check for new colors in each category
+  for (const category of ['background', 'text', 'border']) {
+    for (const color of newData[category]) {
+      if (!originalData[category].includes(color)) {
+        return true
+      }
+    }
+  }
+  return false
+}
+
+// Merge color results, avoiding duplicates
+function mergeColorResults(originalData, newData) {
+  const result = {
+    all: [...originalData.all],
+    background: [...originalData.background],
+    text: [...originalData.text],
+    border: [...originalData.border],
+  }
+
+  // Add new colors to each category
+  for (const category of ['background', 'text', 'border']) {
+    for (const color of newData[category]) {
+      if (!result[category].includes(color)) {
+        result[category].push(color)
+        if (!result.all.includes(color)) {
+          result.all.push(color)
+        }
+      }
+    }
+  }
+
+  return result
+}
+
+// Helper function to check if an element is likely obscured by other elements
+function isElementObscured(element) {
+  // This is a simplified check that catches common cases
+  // A full check would require more complex z-index and stacking context evaluation
+
+  const rect = element.getBoundingClientRect()
+  const computedStyle = window.getComputedStyle(element)
+
+  // Check for elements that would block this element
+  if (parseFloat(computedStyle.opacity) <= 0.1) {
+    return true // Nearly transparent elements are effectively obscured
+  }
+
+  // If element is tiny, check if it might be hidden by other content
+  if (rect.width < 3 || rect.height < 3) {
+    // Very small elements are often not meaningfully visible
+    return true
+  }
+
+  // For complex web apps, we could check for overlapping elements with higher z-index
+  // But that would be performance intensive, so we use simple heuristics
+
+  return false
+}
+
+// Helper function to collect dominant colors by weighting elements by size
+function collectDominantColors(elements) {
+  try {
+    // Create a map to track colors and their visual importance
+    const colorWeights = new Map()
+
+    // Process elements to weight colors by their visual area
+    for (const element of elements) {
+      const rect = element.getBoundingClientRect()
+      const area = rect.width * rect.height
+
+      // Only consider elements with significant visual area
+      if (area > 1000) {
+        // Larger threshold for "dominant" colors
+        const style = window.getComputedStyle(element)
+
+        // Check if element is visible
+        if (
+          style.display !== 'none' &&
+          style.visibility !== 'hidden' &&
+          parseFloat(style.opacity) > 0.1
+        ) {
+          // Extract background color
+          const bgColor = style.backgroundColor
+          if (
+            bgColor &&
+            bgColor !== 'rgba(0, 0, 0, 0)' &&
+            bgColor !== 'transparent'
+          ) {
+            // Weight color by area and update in the map
+            const currentWeight = colorWeights.get(bgColor) || 0
+            colorWeights.set(bgColor, currentWeight + area)
+          }
+        }
+      }
+    }
+
+    // Convert to array and sort by weight descending
+    const weightedColors = Array.from(colorWeights.entries())
+      .sort((a, b) => b[1] - a[1])
+      .map((entry) => entry[0])
+
+    // Return the top dominant colors (limit to 10)
+    return weightedColors.slice(0, 10)
+  } catch (error) {
+    console.error('Error collecting dominant colors:', error)
+    return []
   }
 }

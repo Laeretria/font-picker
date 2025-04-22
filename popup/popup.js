@@ -1,4 +1,4 @@
-// Cleaned popup.js without minimizer functionality
+// Cleaned popup.js with added support for animated/delayed color updates
 document.addEventListener('DOMContentLoaded', function () {
   // Notify background script that popup has opened
   chrome.runtime.sendMessage({ action: 'popupOpened' })
@@ -104,6 +104,19 @@ document.addEventListener('DOMContentLoaded', function () {
           console.log('Initializing ColorsTab')
           if (typeof ColorsTab !== 'undefined') {
             colorsTab = new ColorsTab()
+
+            // Check if we have stored updated colors from animations/delayed loading
+            const latestColorData = localStorage.getItem('latestColorData')
+            if (latestColorData) {
+              try {
+                const parsedData = JSON.parse(latestColorData)
+                colorsTab.updateColorUI(parsedData)
+                // Clear the stored data after using it
+                localStorage.removeItem('latestColorData')
+              } catch (e) {
+                console.error('Error applying stored color data:', e)
+              }
+            }
           } else {
             console.error('ColorsTab class is not defined!')
           }
@@ -165,6 +178,19 @@ document.addEventListener('DOMContentLoaded', function () {
             if (typeof ColorsTab !== 'undefined') {
               // Always create a new instance to get fresh data
               colorsTab = new ColorsTab()
+
+              // Check if we have stored updated colors from animations/delayed loading
+              const latestColorData = localStorage.getItem('latestColorData')
+              if (latestColorData) {
+                try {
+                  const parsedData = JSON.parse(latestColorData)
+                  colorsTab.updateColorUI(parsedData)
+                  // Clear the stored data after using it
+                  localStorage.removeItem('latestColorData')
+                } catch (e) {
+                  console.error('Error applying stored color data:', e)
+                }
+              }
             } else {
               console.error('ColorsTab class is not defined!')
             }
@@ -279,6 +305,26 @@ document.addEventListener('DOMContentLoaded', function () {
             console.error('Error updating color data:', error)
           }
         }
+      }
+
+      sendResponse({ status: 'ok' })
+      return true
+    }
+
+    // Handle color updates from delayed/animated content
+    if (request.action === 'colorUpdateAvailable') {
+      console.log('Received updated colors from delayed/animated content')
+
+      // If color tab is initialized, update it with new colors
+      if (colorsTab) {
+        try {
+          colorsTab.updateColorUI(request.colors)
+        } catch (error) {
+          console.error('Error updating colors UI:', error)
+        }
+      } else {
+        // Store for later if tab isn't active yet
+        localStorage.setItem('latestColorData', JSON.stringify(request.colors))
       }
 
       sendResponse({ status: 'ok' })
