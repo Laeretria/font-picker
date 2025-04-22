@@ -193,7 +193,6 @@ class FontTab {
   updateFontPreview(fontData) {
     this.fontPreviewElement.style.fontFamily = fontData.family || 'sans-serif'
     this.fontPreviewElement.style.fontSize = fontData.size || '16px'
-    this.fontPreviewElement.style.fontWeight = fontData.weight || '400'
     this.fontPreviewElement.style.fontStyle = fontData.style || 'normal'
     this.fontPreviewElement.style.lineHeight = fontData.lineHeight || '24px'
   }

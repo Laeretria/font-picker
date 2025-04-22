@@ -9,6 +9,7 @@
     <!-- Tab-specific styles -->
     <link rel="stylesheet" href="tabs/font/font.css" />
     <link rel="stylesheet" href="tabs/colors/colors.css" />
+    <link rel="stylesheet" href="tabs/overview/overview.css" />
   </head>
   <body>
     <div class="container app-container">
@@ -18,11 +19,41 @@
           <h1 class="sidebar-title">Font Picker</h1>
         </div>
         <div class="nav-items tabs">
+          <div class="nav-item tab-button" data-tab="overview">
+            <span class="icon">
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                width="18"
+                height="18"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <g id="SVGRepo_bgCarrier" stroke-width="0"></g>
+                <g
+                  id="SVGRepo_tracerCarrier"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                ></g>
+                <g id="SVGRepo_iconCarrier">
+                  <path
+                    d="M8 6L21 6M8 12L21 12M8 18L21 18M3.5 6H3.51M3.5 12H3.51M3.5 18H3.51"
+                    stroke="#ffffff"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  ></path>
+                </g>
+              </svg>
+            </span>
+            <span class="label">Overzicht</span>
+          </div>
           <div class="nav-item tab-button active" data-tab="font">
             <span class="icon"
               ><svg
                 xmlns="http://www.w3.org/2000/svg"
                 fill="#ffffff"
+                width="18"
+                height="18"
                 viewBox="0 0 24 24"
               >
                 <g id="SVGRepo_bgCarrier" stroke-width="0"></g>
@@ -37,12 +68,14 @@
                   ></path>
                 </g></svg
             ></span>
-            <span class="label">Pick an element</span>
+            <span class="label">Huidige element</span>
           </div>
           <div class="nav-item tab-button" data-tab="colors">
             <span class="icon"
               ><svg
                 viewBox="0 0 24 24"
+                width="18"
+                height="18"
                 version="1.1"
                 xmlns="http://www.w3.org/2000/svg"
                 xmlns:xlink="http://www.w3.org/1999/xlink"
@@ -55,9 +88,6 @@
                   stroke-linejoin="round"
                 ></g>
                 <g id="SVGRepo_iconCarrier">
-                  <!-- Uploaded to: SVG Repo, www.svgrepo.com, Generator: SVG Repo Mixer Tools -->
-                  <title>ic_fluent_color_24_filled</title>
-                  <desc>Created with Sketch.</desc>
                   <g
                     id="🔍-Product-Icons"
                     stroke="none"
@@ -78,11 +108,11 @@
                   </g>
                 </g></svg
             ></span>
-            <span class="label">Colors</span>
+            <span class="label">Kleuren</span>
           </div>
         </div>
         <div class="element-picker">
-          <button id="element-picker-btn">Pick Element</button>
+          <button id="element-picker-btn">Selecteer element</button>
         </div>
 
         <div class="credits">
@@ -146,7 +176,7 @@
             </div>
           </div>
 
-          <!-- Body Font -->
+          <!-- Body Font - Restructured -->
           <div class="font-card">
             <div class="font-card-header">
               <svg
@@ -167,132 +197,48 @@
                     fill-rule="evenodd"
                     d="M11,9 L9,9 L9,10 L7,10 L7,7 L17,7 L17,10 L15,10 L15,9 L13,9 L13,15 L14,15 L14,17 L10,17 L10,15 L11,15 L11,9 Z M4,2 L20,2 C21.1045695,2 22,2.8954305 22,4 L22,20 C22,21.1045695 21.1045695,22 20,22 L4,22 C2.8954305,22 2,21.1045695 2,20 L2,4 C2,2.8954305 2.8954305,2 4,2 Z M4,4 L4,20 L20,20 L20,4 L4,4 Z"
                   ></path>
-                </g></svg
-              >Body
+                </g>
+              </svg>
+              Body
             </div>
             <div class="font-card-content">
+              <!-- Main font family value -->
               <div class="font-value-container">
-                <p id="body-font" class="font-value">Regola</p>
-                <button class="copy-font-btn copy-body-font" data-copy="Regola">
+                <p id="body-font" class="font-value"></p>
+                <button class="copy-font-btn copy-body-font" data-copy="">
                   Copy
                 </button>
               </div>
-            </div>
-          </div>
 
-          <!-- Font Properties -->
-          <div class="property-boxes">
-            <div class="font-card">
-              <div class="font-card-header">
-                <svg
-                  viewBox="0 0 16 16"
-                  fill="none"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  <g id="SVGRepo_bgCarrier" stroke-width="0"></g>
-                  <g
-                    id="SVGRepo_tracerCarrier"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                  ></g>
-                  <g id="SVGRepo_iconCarrier">
-                    <path
-                      fill-rule="evenodd"
-                      clip-rule="evenodd"
-                      d="M3.2261 2L0.11499 14H2.18111L2.95889 11H6.04092L6.81869 14H8.88482L5.77371 2H3.2261ZM5.5224 9L4.4999 5.05609L3.47741 9H5.5224Z"
-                      fill="#1448ff"
-                    ></path>
-                    <path
-                      fill-rule="evenodd"
-                      clip-rule="evenodd"
-                      d="M14 7.33682C13.5454 7.12085 13.0368 7 12.5 7C10.567 7 9.00004 8.567 9.00004 10.5C9.00004 12.433 10.567 14 12.5 14C13.0368 14 13.5454 13.8792 14 13.6632V14H16V7H14V7.33682ZM11 10.5C11 9.67157 11.6716 9 12.5 9C13.3285 9 14 9.67157 14 10.5C14 11.3284 13.3285 12 12.5 12C11.6716 12 11 11.3284 11 10.5Z"
-                      fill="#1448ff"
-                    ></path>
-                  </g></svg
-                >Style
+              <!-- Nested property boxes -->
+              <div class="body-properties">
+                <div class="property-boxes">
+                  <div class="property-item">
+                    <div class="property-label">Style</div>
+                    <div class="property-value" id="font-style"></div>
+                  </div>
+                  <div class="property-item">
+                    <div class="property-label">Weight</div>
+                    <div class="property-value" id="font-weight"></div>
+                  </div>
+                  <div class="property-item">
+                    <div class="property-label">Size</div>
+                    <div class="property-value" id="font-size"></div>
+                  </div>
+                  <div class="property-item">
+                    <div class="property-label">Line Height</div>
+                    <div class="property-value" id="line-height"></div>
+                  </div>
+                </div>
+
+                <!-- Font Preview inside body card -->
+                <div class="font-preview-container">
+                  <div class="preview-label">Preview</div>
+                  <div class="font-preview" id="font-preview">
+                    AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxYyZz
+                  </div>
+                </div>
               </div>
-              <div class="font-card-content" id="font-style">normal</div>
-            </div>
-            <div class="font-card">
-              <div class="font-card-header">
-                <svg
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  <g id="SVGRepo_bgCarrier" stroke-width="0"></g>
-                  <g
-                    id="SVGRepo_tracerCarrier"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                  ></g>
-                  <g id="SVGRepo_iconCarrier">
-                    <path
-                      d="M6 12H12.5C14.9853 12 17 9.98528 17 7.5C17 5.01472 14.9853 3 12.5 3H6V12ZM6 12H13.5C15.9853 12 18 14.0147 18 16.5C18 18.9853 15.9853 21 13.5 21H6V12Z"
-                      stroke="#1448ff"
-                      stroke-width="4"
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                    ></path>
-                  </g></svg
-                >Weight
-              </div>
-              <div class="font-card-content" id="font-weight">400</div>
-            </div>
-            <div class="font-card">
-              <div class="font-card-header">
-                <svg
-                  viewBox="0 0 15 15"
-                  fill="none"
-                  xmlns="http://www.w3.org/2000/svg"
-                  stroke="#1448ff"
-                  stroke-width="1"
-                >
-                  <g id="SVGRepo_bgCarrier" stroke-width="0"></g>
-                  <g
-                    id="SVGRepo_tracerCarrier"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                  ></g>
-                  <g id="SVGRepo_iconCarrier">
-                    <path
-                      fill-rule="evenodd"
-                      clip-rule="evenodd"
-                      d="M2.78233 2.21707C2.70732 2.14206 2.60557 2.09991 2.49949 2.09991C2.3934 2.09991 2.29166 2.14206 2.21664 2.21707L0.216645 4.21707C0.0604351 4.37328 0.0604351 4.62655 0.216645 4.78276C0.372855 4.93897 0.626121 4.93897 0.78233 4.78276L2.09949 3.4656L2.09949 11.5342L0.78233 10.2171C0.62612 10.0609 0.372854 10.0609 0.216645 10.2171C0.0604349 10.3733 0.0604349 10.6265 0.216645 10.7828L2.21664 12.7828C2.29166 12.8578 2.3934 12.8999 2.49949 12.8999C2.60557 12.8999 2.70731 12.8578 2.78233 12.7828L4.78233 10.7828C4.93854 10.6265 4.93854 10.3733 4.78233 10.2171C4.62612 10.0609 4.37285 10.0609 4.21664 10.2171L2.89949 11.5342L2.89949 3.4656L4.21664 4.78276C4.37285 4.93897 4.62612 4.93897 4.78233 4.78276C4.93854 4.62655 4.93854 4.37328 4.78233 4.21707L2.78233 2.21707ZM10.5 2.74997C10.7107 2.74997 10.8988 2.88211 10.9703 3.08036L13.9703 11.3999C14.064 11.6597 13.9293 11.9462 13.6696 12.0399C13.4098 12.1336 13.1233 11.9989 13.0296 11.7392L12.0477 9.016H8.95228L7.97033 11.7392C7.87666 11.9989 7.59013 12.1336 7.33036 12.0399C7.07059 11.9462 6.93595 11.6597 7.02962 11.3999L10.0296 3.08036C10.1011 2.88211 10.2892 2.74997 10.5 2.74997ZM10.5 4.72396L11.7412 8.166H9.25879L10.5 4.72396Z"
-                      fill="#1448ff"
-                    ></path>
-                  </g></svg
-                >Size
-              </div>
-              <div class="font-card-content" id="font-size">16px</div>
-            </div>
-            <div class="font-card">
-              <div class="font-card-header">
-                <svg
-                  viewBox="0 0 24 24"
-                  height="18"
-                  width="18"
-                  fill="none"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  <g id="SVGRepo_bgCarrier" stroke-width="0"></g>
-                  <g
-                    id="SVGRepo_tracerCarrier"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                  ></g>
-                  <g id="SVGRepo_iconCarrier">
-                    <path
-                      d="M13 6L21 6.00048M13 12L21 12.0005M13 18L21 18.0005M6 4V20M6 4L3 7M6 4L9 7M6 20L3 17M6 20L9 17"
-                      stroke="#1448ff"
-                      stroke-width="3"
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                    ></path>
-                  </g></svg
-                >Line Height
-              </div>
-              <div class="font-card-content" id="line-height">24px</div>
             </div>
           </div>
 
@@ -314,16 +260,6 @@
                 <div class="format-option" data-format="variable">
                   Variables
                 </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Font Preview -->
-          <div class="font-card">
-            <div class="font-card-header">Font preview</div>
-            <div class="font-card-content">
-              <div class="font-preview" id="font-preview">
-                The quick brown fox jumps over the lazy dog
               </div>
             </div>
           </div>
@@ -360,12 +296,45 @@
             <div class="color-list" id="border-colors"></div>
           </div>
         </div>
+        <!-- Add new Overview Tab -->
+        <div class="tab-content" id="overview-tab">
+          <h2>Overview</h2>
+
+          <div class="overview-section">
+            <h3>Font Information</h3>
+            <div class="overview-card">
+              <div class="overview-item">
+                <div class="overview-label">Heading Font</div>
+                <div class="overview-value" id="overview-heading-font"></div>
+              </div>
+              <div class="overview-item">
+                <div class="overview-label">Body Font</div>
+                <div class="overview-value" id="overview-body-font"></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="overview-section">
+            <h3>Color Palette</h3>
+            <div class="overview-colors">
+              <div class="overview-color-section">
+                <h4>Background Colors</h4>
+                <div class="color-grid" id="overview-background-colors"></div>
+              </div>
+              <div class="overview-color-section">
+                <h4>Text Colors</h4>
+                <div class="color-grid" id="overview-text-colors"></div>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
 
     <!-- Tab-specific scripts -->
     <script src="tabs/font/font.js"></script>
     <script src="tabs/colors/colors.js"></script>
+    <script src="tabs/overview/overview.js"></script>
 
     <!-- Main popup controller -->
     <script src="popup.js"></script>

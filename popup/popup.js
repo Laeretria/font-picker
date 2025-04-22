@@ -7,6 +7,7 @@ document.addEventListener('DOMContentLoaded', function () {
   let fontTab = null
   let colorsTab = null
   let pickerActive = false
+  let overviewTab = null
 
   console.log('Popup initialized')
   // Helper function to safely get data
@@ -120,6 +121,14 @@ document.addEventListener('DOMContentLoaded', function () {
           } else {
             console.error('ColorsTab class is not defined!')
           }
+        } // In the tab switching functionality, add:
+        else if (tabId === 'overview' && !overviewTab) {
+          console.log('Initializing OverviewTab')
+          if (typeof OverviewTab !== 'undefined') {
+            overviewTab = new OverviewTab()
+          } else {
+            console.error('OverviewTab class is not defined!')
+          }
         }
       } catch (error) {
         console.error('Error initializing tab controller:', error)
@@ -193,6 +202,15 @@ document.addEventListener('DOMContentLoaded', function () {
               }
             } else {
               console.error('ColorsTab class is not defined!')
+            }
+          } // In the part where we initialize the default active tab, add:
+          else if (activeTabId === 'overview') {
+            console.log('Initializing OverviewTab on popup open')
+            if (typeof OverviewTab !== 'undefined') {
+              // Always create a new instance to get fresh data
+              overviewTab = new OverviewTab()
+            } else {
+              console.error('OverviewTab class is not defined!')
             }
           }
         } catch (error) {
