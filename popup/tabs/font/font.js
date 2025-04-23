@@ -2,7 +2,6 @@
 class FontTab {
   constructor() {
     // Font elements
-    this.headingFontElement = document.getElementById('heading-font')
     this.bodyFontElement = document.getElementById('body-font')
     this.fontStyleElement = document.getElementById('font-style')
     this.fontWeightElement = document.getElementById('font-weight')
@@ -12,16 +11,15 @@ class FontTab {
     this.cssSnippetElement = document.getElementById('css-snippet')
     this.copySnippetButton = document.getElementById('copy-snippet-btn')
 
-    // Track current font data
+    // Track current font data - initialize with empty values
     this.currentFontData = {
-      heading: { family: 'Unknown' },
       body: {
-        family: 'Unknown',
-        style: 'normal',
-        weight: '400',
-        size: '16px',
-        lineHeight: '24px',
-        element: 'p',
+        family: '',
+        style: '',
+        weight: '',
+        size: '',
+        lineHeight: '',
+        element: '',
       },
     }
 
@@ -32,15 +30,91 @@ class FontTab {
     this.initialize()
   }
 
+  // Initialize method
   initialize() {
+    console.log('FontTab: Initializing and clearing all values')
+
+    // Clear all displayed values FIRST before any other operations
+    this.clearAllFontValues()
+
+    // AGGRESSIVE CHECK: Only load data from localStorage if it has the element selection flag
+    const storedData = localStorage.getItem('selectedElementFontData')
+    if (storedData) {
+      try {
+        const parsedData = JSON.parse(storedData)
+
+        // Only use this data if it's marked as coming from element selection
+        if (!parsedData._isFromElementSelection) {
+          console.log(
+            'FontTab: Found data without element selection flag - removing it'
+          )
+          localStorage.removeItem('selectedElementFontData')
+          if (chrome.storage && chrome.storage.local) {
+            chrome.storage.local.remove(['selectedElementFontData'])
+          }
+        } else {
+          console.log(
+            'FontTab: Found valid element selection data, will use it'
+          )
+        }
+      } catch (e) {
+        console.error('Error parsing stored font data:', e)
+        // Remove invalid data
+        localStorage.removeItem('selectedElementFontData')
+      }
+    }
+
     // Set up event listeners
     this.setupEventListeners()
 
-    // Initial analysis
-    this.analyzeFonts()
-
-    // Add copy buttons (after fonts have been analyzed)
+    // Add copy buttons with empty values
     this.addCopyButtons()
+
+    // Explicitly reset stored data
+    this.currentFontData = {
+      body: {
+        family: '',
+        style: '',
+        weight: '',
+        size: '',
+        lineHeight: '',
+        element: '',
+      },
+    }
+  }
+
+  // Clear all font values method
+  clearAllFontValues() {
+    console.log('Clearing all font values')
+    // Clear font names
+    if (this.bodyFontElement) this.bodyFontElement.textContent = ''
+    console.log('Cleared body font element')
+
+    // Clear font properties
+    if (this.fontStyleElement) this.fontStyleElement.textContent = ''
+    if (this.fontWeightElement) this.fontWeightElement.textContent = ''
+    if (this.fontSizeElement) this.fontSizeElement.textContent = ''
+    if (this.lineHeightElement) this.lineHeightElement.textContent = ''
+    console.log('Cleared font style element')
+
+    // Clear font preview - important to empty the text, not just styles
+    if (this.fontPreviewElement) {
+      this.fontPreviewElement.textContent = ''
+      this.fontPreviewElement.style.fontFamily = ''
+      this.fontPreviewElement.style.fontSize = ''
+      this.fontPreviewElement.style.fontStyle = ''
+      this.fontPreviewElement.style.fontWeight = ''
+      this.fontPreviewElement.style.lineHeight = ''
+    }
+    console.log('Cleared font preview')
+
+    // Clear CSS snippet
+    if (this.cssSnippetElement) this.cssSnippetElement.textContent = ''
+    console.log('Cleared CSS snippet')
+
+    // Reset copy buttons' data attributes
+    const bodyCopyBtn = document.querySelector('.copy-body-font')
+    if (bodyCopyBtn) bodyCopyBtn.dataset.copy = ''
   }
 
   setupEventListeners() {
@@ -79,11 +153,6 @@ class FontTab {
 
   addCopyButtons() {
     // Update the data-copy attribute values
-    const headingCopyBtn = document.querySelector('.copy-heading-font')
-    if (headingCopyBtn) {
-      headingCopyBtn.dataset.copy = this.headingFontElement.textContent || ''
-    }
-
     const bodyCopyBtn = document.querySelector('.copy-body-font')
     if (bodyCopyBtn) {
       bodyCopyBtn.dataset.copy = this.bodyFontElement.textContent || ''
@@ -137,7 +206,8 @@ class FontTab {
   }
 
   analyzeFonts() {
-    chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+    this.clearAllFontValues()
+    /*     chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
       chrome.tabs.sendMessage(
         tabs[0].id,
         { action: 'analyzeFonts' },
@@ -153,55 +223,95 @@ class FontTab {
           }
         }
       )
-    })
+    }) */
   }
 
   updateFontUI(fontData) {
-    // Update heading font
-    this.headingFontElement.textContent = fontData.heading.family || 'Unknown'
+    // If no font data, clear everything first
+    if (!fontData || !fontData.body) {
+      this.clearAllFontValues()
+      return
+    }
 
     // Update body font
-    this.bodyFontElement.textContent = fontData.body.family || 'Unknown'
+    this.bodyFontElement.textContent = fontData.body.family || ''
 
     // Update font properties
-    this.fontStyleElement.textContent = fontData.body.style || 'normal'
-    this.fontWeightElement.textContent = fontData.body.weight || '400'
-    this.fontSizeElement.textContent = fontData.body.size || '16px'
-    this.lineHeightElement.textContent = fontData.body.lineHeight
-      ? fontData.body.lineHeight.includes('.')
-        ? fontData.body.lineHeight.replace(/(\d+)\.(\d+).*/, '$1px')
-        : fontData.body.lineHeight.match(/\d+/)
-        ? fontData.body.lineHeight.match(/\d+/)[0] + 'px'
-        : fontData.body.lineHeight
-      : '24px'
+    this.fontStyleElement.textContent = fontData.body.style || ''
+    this.fontWeightElement.textContent = fontData.body.weight || ''
+    this.fontSizeElement.textContent = fontData.body.size || ''
+    this.lineHeightElement.textContent = fontData.body.lineHeight || ''
 
     // Update font preview
     this.updateFontPreview(fontData.body)
 
     // Update copy buttons
-    const headingCopyBtn = document.querySelector('.copy-heading-font')
-    if (headingCopyBtn) {
-      headingCopyBtn.dataset.copy = fontData.heading.family || ''
-    }
-
     const bodyCopyBtn = document.querySelector('.copy-body-font')
     if (bodyCopyBtn) {
       bodyCopyBtn.dataset.copy = fontData.body.family || ''
     }
   }
 
-  updateFontPreview(fontData) {
-    this.fontPreviewElement.style.fontFamily = fontData.family || 'sans-serif'
-    this.fontPreviewElement.style.fontSize = fontData.size || '16px'
-    this.fontPreviewElement.style.fontStyle = fontData.style || 'normal'
-    this.fontPreviewElement.style.lineHeight = fontData.lineHeight || '24px'
+  // Helper method for formatting line-height
+  formatLineHeight(lineHeight) {
+    if (!lineHeight) return ''
+
+    if (lineHeight.includes('.')) {
+      const match = lineHeight.match(/(\d+)\.(\d+)/)
+      if (match) {
+        const integer = parseInt(match[1], 10)
+        const decimal = parseInt(match[2].charAt(0), 10) // Get first decimal digit
+
+        // Round up if decimal is 0.9 or higher
+        if (decimal >= 9) {
+          return integer + 1 + 'px'
+        } else {
+          return integer + 'px'
+        }
+      }
+    }
+
+    // If no decimal or cannot parse, just return the numeric part with px
+    const numericMatch = lineHeight.match(/\d+/)
+    return numericMatch ? numericMatch[0] + 'px' : lineHeight
   }
 
+  updateFontPreview(fontData) {
+    if (!fontData || !fontData.family) {
+      // If no font data, clear the preview
+      this.fontPreviewElement.textContent = ''
+      this.fontPreviewElement.style.fontFamily = ''
+      this.fontPreviewElement.style.fontSize = ''
+      this.fontPreviewElement.style.fontStyle = ''
+      this.fontPreviewElement.style.fontWeight = ''
+      this.fontPreviewElement.style.lineHeight = ''
+      return
+    }
+
+    // If we have font data, set the preview text and styles
+    this.fontPreviewElement.textContent =
+      'AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxYyZz'
+    this.fontPreviewElement.style.fontFamily = fontData.family || ''
+    this.fontPreviewElement.style.fontSize = fontData.size || ''
+    this.fontPreviewElement.style.fontStyle = fontData.style || ''
+    this.fontPreviewElement.style.fontWeight = fontData.weight || ''
+    this.fontPreviewElement.style.lineHeight = fontData.lineHeight || ''
+  }
+
+  // Update selected element font data method
   updateSelectedElementFontData(fontData) {
+    // If no font data passed, clear everything and return
+    if (!fontData || !fontData.family) {
+      this.clearAllFontValues()
+      return
+    }
+
+    // Mark this as coming from element selection
+    fontData._isFromElementSelection = true
+
     // Store the selected element's font data
     if (!this.currentFontData) {
       this.currentFontData = {
-        heading: { family: 'Unknown' },
         body: {},
       }
     }
@@ -212,47 +322,99 @@ class FontTab {
       ...fontData,
     }
 
+    // Format line height
+    let lineHeight = fontData.lineHeight || ''
+    if (lineHeight && lineHeight.includes('.')) {
+      const match = lineHeight.match(/(\d+)\.(\d+)/)
+      if (match) {
+        const integer = parseInt(match[1], 10)
+        const decimal = parseInt(match[2].charAt(0), 10)
+
+        // Round up if decimal is 0.9 or higher
+        if (decimal >= 9) {
+          lineHeight = integer + 1 + 'px'
+        } else {
+          lineHeight = integer + 'px'
+        }
+      }
+    }
+
+    // Update body font name
+    if (this.bodyFontElement) {
+      this.bodyFontElement.textContent = fontData.family || ''
+    }
+
     // Update font properties for selected element
-    this.fontStyleElement.textContent = fontData.style || 'normal'
-    this.fontWeightElement.textContent = fontData.weight || '400'
-    this.fontSizeElement.textContent = fontData.size || '16px'
-    this.lineHeightElement.textContent = fontData.lineHeight
-      ? fontData.lineHeight.includes('.')
-        ? fontData.lineHeight.replace(/(\d+)\.(\d+).*/, '$1px')
-        : fontData.lineHeight.match(/\d+/)
-        ? fontData.lineHeight.match(/\d+/)[0] + 'px'
-        : fontData.lineHeight
-      : '24px'
+    if (this.fontStyleElement) {
+      this.fontStyleElement.textContent = fontData.style || ''
+    }
+    if (this.fontWeightElement) {
+      this.fontWeightElement.textContent = fontData.weight || ''
+    }
+    if (this.fontSizeElement) {
+      this.fontSizeElement.textContent = fontData.size || ''
+    }
+    if (this.lineHeightElement) {
+      this.lineHeightElement.textContent = lineHeight || ''
+    }
 
     // Update font preview
     this.updateFontPreview(fontData)
 
     // Update CSS snippet
     this.updateCSSSnippet()
+
+    // Update copy buttons
+    this.addCopyButtons()
   }
 
+  // Update CSS snippet method
   updateCSSSnippet() {
     if (!this.cssSnippetElement) return
 
     const fontData = this.currentFontData.body
+
+    // If no font family, display empty snippet
+    if (!fontData || !fontData.family) {
+      this.cssSnippetElement.textContent = ''
+      return
+    }
+
     let cssSnippet = ''
+
+    // Format line height
+    let lineHeight = fontData.lineHeight || ''
+    if (lineHeight && lineHeight.includes('.')) {
+      const match = lineHeight.match(/(\d+)\.(\d+)/)
+      if (match) {
+        const integer = parseInt(match[1], 10)
+        const decimal = parseInt(match[2].charAt(0), 10) // Get first decimal digit
+
+        // Round up if decimal is 0.9 or higher
+        if (decimal >= 9) {
+          lineHeight = integer + 1 + 'px'
+        } else {
+          lineHeight = integer + 'px'
+        }
+      }
+    }
 
     // Generate CSS snippet based on the current format option
     switch (this.currentSnippetFormat) {
       case 'element':
         // Element-specific selector
         const element = fontData.element || 'p'
-        cssSnippet = `${element} {\n  font-family: "${fontData.family}", sans-serif;\n  font-size: ${fontData.size};\n  font-weight: ${fontData.weight};\n  font-style: ${fontData.style};\n  line-height: ${fontData.lineHeight};\n}`
+        cssSnippet = `${element} {\n  font-family: "${fontData.family}", sans-serif;\n  font-size: ${fontData.size};\n  font-weight: ${fontData.weight};\n  font-style: ${fontData.style};\n  line-height: ${lineHeight};\n}`
         break
 
       case 'class':
         // Class-based selector
-        cssSnippet = `.font-style {\n  font-family: "${fontData.family}", sans-serif;\n  font-size: ${fontData.size};\n  font-weight: ${fontData.weight};\n  font-style: ${fontData.style};\n  line-height: ${fontData.lineHeight};\n}`
+        cssSnippet = `.font-style {\n  font-family: "${fontData.family}", sans-serif;\n  font-size: ${fontData.size};\n  font-weight: ${fontData.weight};\n  font-style: ${fontData.style};\n  line-height: ${lineHeight};\n}`
         break
 
       case 'variable':
         // CSS variables
-        cssSnippet = `:root {\n  --font-family: "${fontData.family}", sans-serif;\n  --font-size: ${fontData.size};\n  --font-weight: ${fontData.weight};\n  --font-style: ${fontData.style};\n  --line-height: ${fontData.lineHeight};\n}\n\n/* Usage example */\nbody {\n  font-family: var(--font-family);\n  font-size: var(--font-size);\n  font-weight: var(--font-weight);\n  font-style: var(--font-style);\n  line-height: var(--line-height);\n}`
+        cssSnippet = `:root {\n  --font-family: "${fontData.family}", sans-serif;\n  --font-size: ${fontData.size};\n  --font-weight: ${fontData.weight};\n  --font-style: ${fontData.style};\n  --line-height: ${lineHeight};\n}\n\n/* Usage example */\nbody {\n  font-family: var(--font-family);\n  font-size: var(--font-size);\n  font-weight: var(--font-weight);\n  font-style: var(--font-style);\n  line-height: var(--line-height);\n}`
         break
     }
 

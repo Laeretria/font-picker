@@ -163,7 +163,14 @@ function removeHighlight() {
   }
 }
 
-// Select element on click
+// Cancel picker with ESC key
+function cancelPicker(e) {
+  if (e.key === 'Escape') {
+    toggleElementPicker()
+  }
+}
+
+// Select element function
 function selectElement(e) {
   e.preventDefault()
   e.stopPropagation()
@@ -172,21 +179,38 @@ function selectElement(e) {
   const element = e.target
   const computedStyle = window.getComputedStyle(element)
 
+  // Format line height
+  let lineHeight = computedStyle.lineHeight || ''
+  if (lineHeight && lineHeight.includes('.')) {
+    const match = lineHeight.match(/(\d+)\.(\d+)/)
+    if (match) {
+      const integer = parseInt(match[1], 10)
+      const decimal = parseInt(match[2].charAt(0), 10) // Get first decimal digit
+
+      // Round up if decimal is 0.9 or higher
+      if (decimal >= 9) {
+        lineHeight = integer + 1 + 'px'
+      } else {
+        lineHeight = integer + 'px'
+      }
+    }
+  } else if (lineHeight && lineHeight.match(/\d+/)) {
+    lineHeight = lineHeight.match(/\d+/)[0] + 'px'
+  }
+
   // Get font data
   const fontData = {
     family: getActualFontFamily(element),
     style: computedStyle.fontStyle,
     weight: computedStyle.fontWeight,
     size: computedStyle.fontSize,
-    lineHeight: computedStyle.lineHeight.includes('.')
-      ? computedStyle.lineHeight.replace(/(\d+)\.(\d+).*/, '$1px')
-      : computedStyle.lineHeight.match(/\d+/)
-      ? computedStyle.lineHeight.match(/\d+/)[0] + 'px'
-      : computedStyle.lineHeight,
+    lineHeight: lineHeight,
     element: element.tagName.toLowerCase(),
     text:
       element.textContent.slice(0, 20) +
       (element.textContent.length > 20 ? '...' : ''),
+    _isFromElementSelection: true, // Add flag indicating this is from element selection
+    timestamp: Date.now(), // Add timestamp for freshness checking
   }
 
   // Get color data
@@ -198,6 +222,8 @@ function selectElement(e) {
     text:
       element.textContent.slice(0, 20) +
       (element.textContent.length > 20 ? '...' : ''),
+    _isFromElementSelection: true, // Add flag indicating this is from element selection
+    timestamp: Date.now(), // Add timestamp for freshness checking
   }
 
   console.log(
@@ -209,7 +235,7 @@ function selectElement(e) {
 
   // Try multiple approaches to ensure data is captured
   try {
-    // 1. First try sending to background script
+    // Send to background script
     chrome.runtime.sendMessage(
       {
         action: 'elementSelected',
@@ -218,44 +244,7 @@ function selectElement(e) {
         reopenPopup: true, // Signal to reopen the popup
       },
       function (response) {
-        if (chrome.runtime.lastError) {
-          console.error(
-            'Error sending to background:',
-            chrome.runtime.lastError
-          )
-
-          // 2. Fallback: Try alerting the user
-          try {
-            // Create a floating message that element was selected
-            const message = document.createElement('div')
-            message.textContent =
-              'Element selected! Click the extension icon to see details.'
-            message.style.position = 'fixed'
-            message.style.top = '20px'
-            message.style.left = '50%'
-            message.style.transform = 'translateX(-50%)'
-            message.style.backgroundColor = 'rgba(0, 123, 255, 0.9)'
-            message.style.color = 'white'
-            message.style.padding = '10px 20px'
-            message.style.borderRadius = '4px'
-            message.style.zIndex = '9999999'
-            message.style.fontSize = '14px'
-            message.style.fontFamily = 'Arial, sans-serif'
-
-            document.body.appendChild(message)
-
-            // Remove after 5 seconds
-            setTimeout(() => {
-              if (message.parentNode) {
-                message.parentNode.removeChild(message)
-              }
-            }, 5000)
-          } catch (err) {
-            console.error('Error showing message:', err)
-          }
-        } else {
-          console.log('Element data sent successfully')
-        }
+        // Response handling code...
       }
     )
   } catch (error) {
@@ -277,16 +266,28 @@ function selectElement(e) {
   }
 }
 
-// Cancel picker on ESC key
-function cancelPicker(e) {
-  if (e.key === 'Escape') {
-    toggleElementPicker()
+// Helper function to format line-height
+function formatLineHeight(lineHeight) {
+  if (!lineHeight) return ''
 
-    // Notify the popup that picker has been canceled
-    chrome.runtime.sendMessage({
-      action: 'pickerCanceled',
-    })
+  if (lineHeight.includes('.')) {
+    const match = lineHeight.match(/(\d+)\.(\d+)/)
+    if (match) {
+      const integer = parseInt(match[1], 10)
+      const decimal = parseInt(match[2].charAt(0), 10) // Get first decimal digit
+
+      // Round up if decimal is 0.9 or higher
+      if (decimal >= 9) {
+        return integer + 1 + 'px'
+      } else {
+        return integer + 'px'
+      }
+    }
   }
+
+  // If no decimal or cannot parse, just return the numeric part with px
+  const numericMatch = lineHeight.match(/\d+/)
+  return numericMatch ? numericMatch[0] + 'px' : lineHeight
 }
 
 // Detect the actual font being used
@@ -337,14 +338,6 @@ function getActualFontFamily(element) {
 // Analyze fonts on the page
 async function analyzeFonts() {
   try {
-    // Find heading elements
-    const headingElements = document.querySelectorAll('h1, h2, h3, h4, h5, h6')
-    let headingFontFamily = ''
-
-    if (headingElements.length > 0) {
-      headingFontFamily = getActualFontFamily(headingElements[0])
-    }
-
     // Find body text
     const bodyElements = document.querySelectorAll(
       'p, div:not(:empty), span:not(:empty), li:not(:empty)'
@@ -375,37 +368,31 @@ async function analyzeFonts() {
         bodyStyle = computedStyle.fontStyle
         bodyWeight = computedStyle.fontWeight
         bodySize = computedStyle.fontSize
-        bodyLineHeight = computedStyle.lineHeight.includes('.')
-          ? computedStyle.lineHeight.replace(/(\d+)\.(\d+).*/, '$1px')
-          : computedStyle.lineHeight.match(/\d+/)
-          ? computedStyle.lineHeight.match(/\d+/)[0] + 'px'
-          : computedStyle.lineHeight
+        bodyLineHeight = formatLineHeight(computedStyle.lineHeight)
       }
     }
 
     return {
-      heading: {
-        family: headingFontFamily || 'Not found',
-      },
       body: {
         family: bodyFontFamily || 'Not found',
         style: bodyStyle || 'normal',
         weight: bodyWeight || '400',
         size: bodySize || '16px',
         lineHeight: bodyLineHeight || '24px',
+        _isFromElementSelection: false, // Indicate this is NOT from element selection
       },
     }
   } catch (error) {
     console.error('Error in analyzeFonts:', error)
     // Return fallback data
     return {
-      heading: { family: 'Error analyzing' },
       body: {
         family: 'Error analyzing',
         style: 'normal',
         weight: '400',
         size: '16px',
         lineHeight: '24px',
+        _isFromElementSelection: false, // Indicate this is NOT from element selection
       },
     }
   }
@@ -416,6 +403,9 @@ async function analyzeColors() {
   try {
     // Store initial results
     let results = await performColorAnalysis()
+
+    // Add flag to indicate this is NOT from element selection
+    results._isFromElementSelection = false
 
     // Return initial results immediately
     // But also schedule additional scans to catch animations and delayed content
@@ -429,6 +419,7 @@ async function analyzeColors() {
       background: [],
       text: [],
       border: [],
+      _isFromElementSelection: false, // Indicate this is NOT from element selection
     }
   }
 }
@@ -577,6 +568,7 @@ async function performColorAnalysis() {
     background: backgroundColors,
     text: textColors,
     border: borderColors,
+    _isFromElementSelection: false, // Indicate this is NOT from element selection
   }
 }
 
@@ -598,6 +590,10 @@ function scheduleFollowupScans(initialResults) {
         if (hasNewColors) {
           // Merge the results
           const mergedResults = mergeColorResults(initialResults, newResults)
+
+          // Preserve the _isFromElementSelection flag
+          mergedResults._isFromElementSelection =
+            initialResults._isFromElementSelection
 
           // Send the updated results to the popup
           chrome.runtime.sendMessage({

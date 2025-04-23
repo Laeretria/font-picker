@@ -6,7 +6,9 @@ let lastAnalyzedUrl = ''
 // Track last selected element data
 let lastSelectedData = null
 
-// Store popup state
+// Track page refreshes and element selection
+let pageLoadTimestamps = {}
+let lastElementSelectionTime = 0
 let popupOpen = false
 
 // Helper function to safely use storage
@@ -52,31 +54,95 @@ function safelyGetData(keys, callback) {
   }
 }
 
-// Listen for tab updates
+// Safely inject content script with proper error handling
+function safelyInjectContentScript(tabId) {
+  // Skip if we don't have the scripting permission
+  if (!chrome.scripting) {
+    console.log('Scripting API not available')
+    return Promise.reject(new Error('Scripting API not available'))
+  }
+
+  return new Promise((resolve, reject) => {
+    // First check if we can inject into this tab by checking permissions
+    chrome.permissions.contains(
+      { permissions: ['scripting'], origins: ['<all_urls>'] },
+      (hasPermission) => {
+        if (!hasPermission) {
+          console.log('No scripting permission for this tab')
+          reject(new Error('No scripting permission for this tab'))
+          return
+        }
+
+        // Try to execute script with proper error handling
+        chrome.scripting
+          .executeScript({
+            target: { tabId: tabId },
+            files: ['content/content.js'],
+          })
+          .then(() => {
+            console.log('Content script injected successfully')
+            resolve()
+          })
+          .catch((err) => {
+            console.error('Error injecting content script:', err)
+            reject(err)
+          })
+      }
+    )
+  })
+}
+
+// Function to clear all stored data
+function clearAllStoredData() {
+  console.log('CLEARING ALL STORED DATA IN BACKGROUND')
+
+  // Clear in-memory variables
+  lastSelectedData = null
+
+  // Clear chrome storage
+  if (chrome.storage && chrome.storage.local) {
+    chrome.storage.local.remove([
+      'selectedElementFontData',
+      'selectedElementColorData',
+      'lastSelectionTimestamp',
+      'latestColorData',
+    ])
+  }
+
+  return true
+}
+
+// Listen for tab updates - Track page refreshes
 chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
   // Only run when the page is fully loaded
   if (changeInfo.status === 'complete' && tab.url) {
-    // Skip chrome:// pages, chrome web store, etc.
+    // Record page load timestamp
+    pageLoadTimestamps[tabId] = Date.now()
+
+    console.log(`Tab ${tabId} loaded at ${pageLoadTimestamps[tabId]}`)
+
+    // Skip chrome:// pages, chrome web store, file:// URLs, etc.
     if (
       !tab.url.startsWith('chrome://') &&
       !tab.url.startsWith('chrome-extension://') &&
+      !tab.url.startsWith('file://') &&
       !tab.url.includes('chrome.google.com/webstore')
     ) {
       // Store the URL for comparison
       lastAnalyzedUrl = tab.url
 
-      // Execute content script on this tab
-      chrome.scripting
-        .executeScript({
-          target: { tabId: tabId },
-          files: ['content/content.js'],
-        })
-        .catch((err) => console.error('Error injecting content script:', err))
+      // Try to inject the content script but handle potential errors
+      safelyInjectContentScript(tabId).catch((err) => {
+        // Just log the error - we'll handle this case when the popup tries to communicate
+        console.log(
+          `Could not inject into tab ${tabId}, will retry when needed: ${err.message}`
+        )
+      })
     }
   }
 })
 
-// Listen for tab activation (switching between tabs)
+// Listen for tab activation (switching between tabs) with better error handling
 chrome.tabs.onActivated.addListener((activeInfo) => {
   chrome.tabs.get(activeInfo.tabId, (tab) => {
     if (tab && tab.url && tab.url !== lastAnalyzedUrl) {
@@ -86,15 +152,16 @@ chrome.tabs.onActivated.addListener((activeInfo) => {
       if (
         !tab.url.startsWith('chrome://') &&
         !tab.url.startsWith('chrome-extension://') &&
+        !tab.url.startsWith('file://') &&
         !tab.url.includes('chrome.google.com/webstore')
       ) {
-        // Execute content script on this tab
-        chrome.scripting
-          .executeScript({
-            target: { tabId: activeInfo.tabId },
-            files: ['content/content.js'],
-          })
-          .catch((err) => console.error('Error injecting content script:', err))
+        // Try to inject but handle failures gracefully
+        safelyInjectContentScript(activeInfo.tabId).catch((err) => {
+          // Just log the error - we'll handle this case when the popup tries to communicate
+          console.log(
+            `Could not inject into activated tab, will retry when needed: ${err.message}`
+          )
+        })
       }
     }
   })
@@ -104,6 +171,10 @@ chrome.tabs.onActivated.addListener((activeInfo) => {
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   if (request.action === 'popupOpened') {
     popupOpen = true
+    console.log(
+      'Popup opened, lastSelectedData status:',
+      lastSelectedData ? 'exists' : 'null'
+    )
 
     // If we have recently selected data, send it to the popup
     if (lastSelectedData && Date.now() - lastSelectedData.timestamp < 30000) {
@@ -127,8 +198,71 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     return true
   }
 
+  // NEW: Check page status (used by popup to determine when to clear data)
+  if (request.action === 'checkPageStatus') {
+    chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+      if (!tabs || !tabs[0]) {
+        sendResponse({ error: 'No active tab' })
+        return
+      }
+
+      const tabId = tabs[0].id
+      const currentUrl = tabs[0].url
+      const storedUrl = lastAnalyzedUrl
+
+      // Check URL change
+      const urlChanged = currentUrl !== storedUrl
+
+      // Check page refresh - was this page loaded recently?
+      const loadTime = pageLoadTimestamps[tabId] || 0
+      const pageRefreshed = loadTime > lastElementSelectionTime
+
+      // Check for recent element selection (within last 30 seconds)
+      const recentElementSelection =
+        Date.now() - lastElementSelectionTime < 30000
+
+      console.log(
+        `Page status: URL changed: ${urlChanged}, Page refreshed: ${pageRefreshed}, Recent selection: ${recentElementSelection}`
+      )
+      console.log(`  Current URL: ${currentUrl}, Stored URL: ${storedUrl}`)
+      console.log(
+        `  Page load time: ${loadTime}, Last selection time: ${lastElementSelectionTime}`
+      )
+
+      // Update stored URL
+      lastAnalyzedUrl = currentUrl
+
+      sendResponse({
+        urlChanged,
+        pageRefreshed,
+        recentElementSelection,
+        pageLoadTime: loadTime,
+        lastSelectionTime: lastElementSelectionTime,
+      })
+    })
+    return true
+  }
+
+  // NEW: Mark element selection event
+  if (request.action === 'markElementSelectionEvent') {
+    lastElementSelectionTime = request.timestamp || Date.now()
+    console.log(`Marked element selection event at ${lastElementSelectionTime}`)
+    sendResponse({ status: 'ok' })
+    return true
+  }
+
+  // NEW: Clear stored data
+  if (request.action === 'clearStoredData') {
+    clearAllStoredData()
+    sendResponse({ status: 'ok' })
+    return true
+  }
+
   if (request.action === 'elementSelected') {
     console.log('Background received element selection:', request)
+
+    // Update selection timestamp
+    lastElementSelectionTime = Date.now()
 
     // Store the data
     lastSelectedData = {
@@ -177,85 +311,120 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   if (request.action === 'checkContentScriptStatus') {
     // Forward this message to the content script in the active tab
     chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-      if (tabs && tabs[0] && tabs[0].id) {
-        // Inject content script first to ensure it's available
-        chrome.scripting
-          .executeScript({
-            target: { tabId: tabs[0].id },
-            files: ['content/content.js'],
-          })
+      if (!tabs || !tabs[0] || !tabs[0].id) {
+        sendResponse({
+          contentScriptRunning: false,
+          error: 'No active tab found',
+        })
+        return
+      }
+
+      // First try to send a ping to see if content script is already running
+      chrome.tabs.sendMessage(tabs[0].id, { action: 'ping' }, (response) => {
+        // If we get a response, content script is already running
+        if (!chrome.runtime.lastError && response && response.status === 'ok') {
+          sendResponse({ contentScriptRunning: true })
+          return
+        }
+
+        // If we get here, content script isn't running or there was an error
+        // Try to inject it
+        safelyInjectContentScript(tabs[0].id)
           .then(() => {
-            // Now try to send message to content script
+            // After injection, try ping again
             chrome.tabs.sendMessage(
               tabs[0].id,
               { action: 'ping' },
-              (response) => {
-                // Check if we got a response
-                const contentScriptRunning =
+              (pingResponse) => {
+                const success =
                   !chrome.runtime.lastError &&
-                  response &&
-                  response.status === 'ok'
-                sendResponse({ contentScriptRunning })
+                  pingResponse &&
+                  pingResponse.status === 'ok'
+
+                sendResponse({
+                  contentScriptRunning: success,
+                  message: success
+                    ? 'Script injected and running'
+                    : 'Script injection failed',
+                })
               }
             )
           })
           .catch((err) => {
-            console.error('Error injecting content script:', err)
-            sendResponse({ contentScriptRunning: false })
+            // If we can't inject, report failure
+            sendResponse({
+              contentScriptRunning: false,
+              error: `Cannot inject script: ${err.message}`,
+              message: `This page cannot be analyzed. Try visiting a different website.`,
+            })
           })
-      } else {
-        sendResponse({ contentScriptRunning: false })
-      }
+      })
     })
     return true // Keep the message channel open for async response
   }
 
   if (request.action === 'getPageData') {
     chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-      if (tabs && tabs[0] && tabs[0].id) {
-        // Get the current URL
-        const currentUrl = tabs[0].url
-
-        // Notify content script to analyze page data
-        chrome.tabs.sendMessage(
-          tabs[0].id,
-          { action: 'analyzePage' },
-          (response) => {
-            if (chrome.runtime.lastError) {
-              console.error(
-                'Error communicating with content script:',
-                chrome.runtime.lastError
-              )
-              // Try to inject content script and retry
-              chrome.scripting
-                .executeScript({
-                  target: { tabId: tabs[0].id },
-                  files: ['content/content.js'],
-                })
-                .then(() => {
-                  // Retry after injection
-                  chrome.tabs.sendMessage(
-                    tabs[0].id,
-                    { action: 'analyzePage' },
-                    (retryResponse) => {
-                      sendResponse(
-                        retryResponse || { error: 'Failed to analyze page' }
-                      )
-                    }
-                  )
-                })
-                .catch((err) => {
-                  console.error('Error injecting content script:', err)
-                  sendResponse({ error: 'Cannot analyze this page type' })
-                })
-            } else {
-              sendResponse(response)
-            }
-          }
-        )
-      } else {
+      if (!tabs || !tabs[0] || !tabs[0].id) {
         sendResponse({ error: 'No active tab found' })
+        return
       }
+
+      // Get the current URL
+      const currentUrl = tabs[0].url
+
+      // First try to ping the content script to see if it's running
+      chrome.tabs.sendMessage(
+        tabs[0].id,
+        { action: 'ping' },
+        (pingResponse) => {
+          const isRunning =
+            !chrome.runtime.lastError &&
+            pingResponse &&
+            pingResponse.status === 'ok'
+
+          if (isRunning) {
+            // Content script is running, request analysis
+            chrome.tabs.sendMessage(
+              tabs[0].id,
+              { action: 'analyzePage' },
+              (response) => {
+                if (chrome.runtime.lastError) {
+                  sendResponse({ error: 'Error communicating with page' })
+                } else {
+                  sendResponse(response)
+                }
+              }
+            )
+          } else {
+            // Content script is not running, try to inject it
+            safelyInjectContentScript(tabs[0].id)
+              .then(() => {
+                // After injection, request analysis
+                chrome.tabs.sendMessage(
+                  tabs[0].id,
+                  { action: 'analyzePage' },
+                  (response) => {
+                    if (chrome.runtime.lastError) {
+                      sendResponse({
+                        error: 'Error communicating with page after injection',
+                      })
+                    } else {
+                      sendResponse(response)
+                    }
+                  }
+                )
+              })
+              .catch((err) => {
+                sendResponse({
+                  error: 'Cannot analyze this page',
+                  message:
+                    'This page cannot be analyzed. Try visiting a different website.',
+                })
+              })
+          }
+        }
+      )
     })
     return true // Keep the message channel open for async response
   }

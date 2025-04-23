@@ -9,7 +9,79 @@ document.addEventListener('DOMContentLoaded', function () {
   let pickerActive = false
   let overviewTab = null
 
+  // AGGRESSIVE DATA CLEARING APPROACH:
+  // We'll check both URL and page refresh status
+  checkAndClearData()
+
   console.log('Popup initialized')
+
+  // Helper function to aggressively check and clear data
+  function checkAndClearData() {
+    chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
+      if (tabs && tabs[0] && tabs[0].id) {
+        const currentUrl = tabs[0].url
+
+        // Request page information from background script
+        chrome.runtime.sendMessage(
+          {
+            action: 'checkPageStatus',
+            url: currentUrl,
+          },
+          function (response) {
+            // If any of these conditions are true, clear data:
+            // 1. URL has changed
+            // 2. Page has been refreshed
+            // 3. No recent element selection
+            if (
+              response &&
+              (response.urlChanged ||
+                response.pageRefreshed ||
+                !response.recentElementSelection)
+            ) {
+              console.log('Clearing data because:', response)
+              clearAllStorageData()
+            }
+          }
+        )
+      }
+    })
+  }
+
+  // Function to clear ALL storage locations
+  function clearAllStorageData() {
+    console.log('PERFORMING COMPLETE DATA CLEAR')
+
+    // 1. Clear localStorage
+    localStorage.removeItem('selectedElementFontData')
+    localStorage.removeItem('selectedElementColorData')
+    localStorage.removeItem('latestColorData')
+    localStorage.removeItem('lastVisitedUrl')
+
+    // 2. Clear chrome.storage
+    if (chrome.storage && chrome.storage.local) {
+      chrome.storage.local.remove([
+        'selectedElementFontData',
+        'selectedElementColorData',
+        'latestColorData',
+        'lastVisitedUrl',
+        'lastSelectionTimestamp',
+      ])
+    }
+
+    // 3. Clear session storage if available
+    try {
+      sessionStorage.clear()
+    } catch (e) {
+      console.log('Session storage not available')
+    }
+
+    // 4. Tell background script to clear its data
+    chrome.runtime.sendMessage({ action: 'clearStoredData' })
+
+    // 5. Reset UI
+    clearAllFontUI()
+  }
+
   // Helper function to safely get data
   function safelyGetData(keys, callback) {
     try {
@@ -97,6 +169,8 @@ document.addEventListener('DOMContentLoaded', function () {
         if (tabId === 'font' && !fontTab) {
           console.log('Initializing FontTab')
           if (typeof FontTab !== 'undefined') {
+            // Pre-clear all font values in the UI
+            clearAllFontUI()
             fontTab = new FontTab()
           } else {
             console.error('FontTab class is not defined!')
@@ -136,6 +210,46 @@ document.addEventListener('DOMContentLoaded', function () {
     })
   })
 
+  // Helper function to clear all font UI elements
+  function clearAllFontUI() {
+    // Clear all font-related elements in the UI
+    if (document.getElementById('body-font')) {
+      document.getElementById('body-font').textContent = ''
+    }
+    if (document.getElementById('font-style')) {
+      document.getElementById('font-style').textContent = ''
+    }
+    if (document.getElementById('font-weight')) {
+      document.getElementById('font-weight').textContent = ''
+    }
+    if (document.getElementById('font-size')) {
+      document.getElementById('font-size').textContent = ''
+    }
+    if (document.getElementById('line-height')) {
+      document.getElementById('line-height').textContent = ''
+    }
+    if (document.getElementById('font-preview')) {
+      document.getElementById('font-preview').textContent = ''
+      const preview = document.getElementById('font-preview')
+      if (preview) {
+        preview.style.fontFamily = ''
+        preview.style.fontSize = ''
+        preview.style.fontStyle = ''
+        preview.style.fontWeight = ''
+        preview.style.lineHeight = ''
+      }
+    }
+    if (document.getElementById('css-snippet')) {
+      document.getElementById('css-snippet').textContent = ''
+    }
+
+    // Also clear copy button data attributes
+    const bodyCopyBtn = document.querySelector('.copy-body-font')
+    if (bodyCopyBtn) {
+      bodyCopyBtn.dataset.copy = ''
+    }
+  }
+
   // Element picker functionality
   const elementPickerBtn = document.getElementById('element-picker-btn')
   if (elementPickerBtn) {
@@ -172,10 +286,13 @@ document.addEventListener('DOMContentLoaded', function () {
       if (activeNavItem) {
         const activeTabId = activeNavItem.getAttribute('data-tab')
         console.log('Default active tab:', activeTabId)
-
         try {
           if (activeTabId === 'font') {
             console.log('Initializing FontTab on popup open')
+
+            // Pre-clear all font UI elements
+            clearAllFontUI()
+
             if (typeof FontTab !== 'undefined') {
               // Always create a new instance to get fresh data
               fontTab = new FontTab()
@@ -187,7 +304,6 @@ document.addEventListener('DOMContentLoaded', function () {
             if (typeof ColorsTab !== 'undefined') {
               // Always create a new instance to get fresh data
               colorsTab = new ColorsTab()
-
               // Check if we have stored updated colors from animations/delayed loading
               const latestColorData = localStorage.getItem('latestColorData')
               if (latestColorData) {
@@ -244,8 +360,15 @@ document.addEventListener('DOMContentLoaded', function () {
         fontNavItem.click()
       }
 
-      // Save the data to localStorage
+      // Mark this as a special element selection case
+      chrome.runtime.sendMessage({
+        action: 'markElementSelectionEvent',
+        timestamp: Date.now(),
+      })
+
+      // Add a special flag to indicate this is from element selection
       if (request.fontData) {
+        request.fontData._isFromElementSelection = true
         localStorage.setItem(
           'selectedElementFontData',
           JSON.stringify(request.fontData)
@@ -253,6 +376,7 @@ document.addEventListener('DOMContentLoaded', function () {
       }
 
       if (request.colorData) {
+        request.colorData._isFromElementSelection = true
         localStorage.setItem(
           'selectedElementColorData',
           JSON.stringify(request.colorData)
@@ -283,6 +407,12 @@ document.addEventListener('DOMContentLoaded', function () {
     if (request.action === 'loadSelectedElement') {
       console.log('Popup received loadSelectedElement message:', request)
 
+      // Mark this as a special element selection case
+      chrome.runtime.sendMessage({
+        action: 'markElementSelectionEvent',
+        timestamp: Date.now(),
+      })
+
       // Focus on font tab
       const fontNavItem = document.querySelector('.nav-item[data-tab="font"]')
       if (fontNavItem) {
@@ -291,6 +421,9 @@ document.addEventListener('DOMContentLoaded', function () {
 
       // Handle font data
       if (request.fontData) {
+        // Add flag to indicate this is from element selection
+        request.fontData._isFromElementSelection = true
+
         // Save to localStorage
         localStorage.setItem(
           'selectedElementFontData',
@@ -309,6 +442,9 @@ document.addEventListener('DOMContentLoaded', function () {
 
       // Handle color data
       if (request.colorData) {
+        // Add flag to indicate this is from element selection
+        request.colorData._isFromElementSelection = true
+
         // Save to localStorage
         localStorage.setItem(
           'selectedElementColorData',
@@ -362,46 +498,6 @@ document.addEventListener('DOMContentLoaded', function () {
     }
     return true // Keep the message channel open for async response
   })
-
-  // Try to load the most recent element data
-  safelyGetData(
-    ['selectedElementFontData', 'selectedElementColorData'],
-    function (data) {
-      // Load font data if available
-      if (data.selectedElementFontData) {
-        localStorage.setItem(
-          'selectedElementFontData',
-          JSON.stringify(data.selectedElementFontData)
-        )
-
-        if (fontTab) {
-          try {
-            fontTab.updateSelectedElementFontData(data.selectedElementFontData)
-          } catch (error) {
-            console.error('Error updating font data:', error)
-          }
-        }
-      }
-
-      // Load color data if available
-      if (data.selectedElementColorData) {
-        localStorage.setItem(
-          'selectedElementColorData',
-          JSON.stringify(data.selectedElementColorData)
-        )
-
-        if (colorsTab) {
-          try {
-            colorsTab.updateSelectedElementColorData(
-              data.selectedElementColorData
-            )
-          } catch (error) {
-            console.error('Error updating color data:', error)
-          }
-        }
-      }
-    }
-  )
 
   // Add this to notify when popup is closing/being unloaded
   window.addEventListener('beforeunload', function () {
