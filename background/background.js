@@ -1,7 +1,8 @@
 // background.js - This script runs in the background
 
-// Track the last analyzed URL
+// Track the last analyzed URL and tab ID
 let lastAnalyzedUrl = ''
+let lastActiveTabId = null
 
 // Track last selected element data
 let lastSelectedData = null
@@ -142,11 +143,35 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
   }
 })
 
-// Listen for tab activation (switching between tabs) with better error handling
+// Listen for tab activation (switching between tabs) with better error handling and tab ID tracking
 chrome.tabs.onActivated.addListener((activeInfo) => {
-  chrome.tabs.get(activeInfo.tabId, (tab) => {
-    if (tab && tab.url && tab.url !== lastAnalyzedUrl) {
-      lastAnalyzedUrl = tab.url
+  const tabId = activeInfo.tabId
+  console.log(`Tab activated: ${tabId} (previous: ${lastActiveTabId})`)
+
+  // If we're switching to a different tab, we should clear data
+  const tabChanged = lastActiveTabId !== null && lastActiveTabId !== tabId
+
+  // Remember this tab as the last active tab
+  lastActiveTabId = tabId
+
+  // Store this tab switch event so popup can check it
+  safelyStoreData('lastTabSwitchInfo', {
+    tabId: tabId,
+    timestamp: Date.now(),
+    shouldClearData: tabChanged,
+  })
+
+  chrome.tabs.get(tabId, (tab) => {
+    if (tab && tab.url) {
+      // Check if URL is different from last analyzed URL
+      const urlChanged = tab.url !== lastAnalyzedUrl
+
+      // If URL changed, clear data and update lastAnalyzedUrl
+      if (urlChanged) {
+        console.log('URL changed, clearing data')
+        clearAllStoredData()
+        lastAnalyzedUrl = tab.url
+      }
 
       // Skip chrome:// pages, chrome web store, etc.
       if (
@@ -156,7 +181,7 @@ chrome.tabs.onActivated.addListener((activeInfo) => {
         !tab.url.includes('chrome.google.com/webstore')
       ) {
         // Try to inject but handle failures gracefully
-        safelyInjectContentScript(activeInfo.tabId).catch((err) => {
+        safelyInjectContentScript(tabId).catch((err) => {
           // Just log the error - we'll handle this case when the popup tries to communicate
           console.log(
             `Could not inject into activated tab, will retry when needed: ${err.message}`
@@ -175,6 +200,24 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
       'Popup opened, lastSelectedData status:',
       lastSelectedData ? 'exists' : 'null'
     )
+
+    // Get current tab ID to check for tab switches
+    chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+      if (tabs && tabs[0] && tabs[0].id) {
+        const currentTabId = tabs[0].id
+
+        // If this is a different tab than before, clear associated data
+        if (lastActiveTabId !== null && lastActiveTabId !== currentTabId) {
+          // We've switched tabs, should clear data unless there's been a recent element selection
+          if (Date.now() - lastElementSelectionTime > 30000) {
+            clearAllStoredData()
+          }
+        }
+
+        // Update the last active tab ID
+        lastActiveTabId = currentTabId
+      }
+    })
 
     // If we have recently selected data, send it to the popup
     if (lastSelectedData && Date.now() - lastSelectedData.timestamp < 30000) {
@@ -198,6 +241,35 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     return true
   }
 
+  // Handle checking for tab changes
+  if (request.action === 'checkTabStatus') {
+    chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+      if (!tabs || !tabs[0]) {
+        sendResponse({ error: 'No active tab' })
+        return
+      }
+
+      const currentTabId = tabs[0].id
+      const tabChanged =
+        lastActiveTabId !== null && lastActiveTabId !== currentTabId
+
+      console.log(
+        `Tab status check: Current tab: ${currentTabId}, Last tab: ${lastActiveTabId}, Changed: ${tabChanged}`
+      )
+
+      // Update the stored tab ID
+      lastActiveTabId = currentTabId
+
+      sendResponse({
+        currentTabId: currentTabId,
+        previousTabId: lastActiveTabId,
+        tabChanged: tabChanged,
+        lastTabSwitchTimestamp: Date.now(),
+      })
+    })
+    return true
+  }
+
   // NEW: Check page status (used by popup to determine when to clear data)
   if (request.action === 'checkPageStatus') {
     chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
@@ -213,6 +285,9 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
       // Check URL change
       const urlChanged = currentUrl !== storedUrl
 
+      // Check tab change
+      const tabChanged = lastActiveTabId !== null && lastActiveTabId !== tabId
+
       // Check page refresh - was this page loaded recently?
       const loadTime = pageLoadTimestamps[tabId] || 0
       const pageRefreshed = loadTime > lastElementSelectionTime
@@ -222,22 +297,26 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         Date.now() - lastElementSelectionTime < 30000
 
       console.log(
-        `Page status: URL changed: ${urlChanged}, Page refreshed: ${pageRefreshed}, Recent selection: ${recentElementSelection}`
+        `Page status check: URL changed: ${urlChanged}, Tab changed: ${tabChanged}, Page refreshed: ${pageRefreshed}, Recent selection: ${recentElementSelection}`
       )
       console.log(`  Current URL: ${currentUrl}, Stored URL: ${storedUrl}`)
+      console.log(`  Current tab: ${tabId}, Last tab: ${lastActiveTabId}`)
       console.log(
         `  Page load time: ${loadTime}, Last selection time: ${lastElementSelectionTime}`
       )
 
-      // Update stored URL
+      // Update stored values
       lastAnalyzedUrl = currentUrl
+      lastActiveTabId = tabId
 
       sendResponse({
         urlChanged,
+        tabChanged,
         pageRefreshed,
         recentElementSelection,
         pageLoadTime: loadTime,
         lastSelectionTime: lastElementSelectionTime,
+        currentTabId: tabId,
       })
     })
     return true

@@ -9,38 +9,77 @@ document.addEventListener('DOMContentLoaded', function () {
   let pickerActive = false
   let overviewTab = null
 
+  // Track current tab for tab switching detection
+  let currentTabId = null
+
   // AGGRESSIVE DATA CLEARING APPROACH:
-  // We'll check both URL and page refresh status
+  // We'll check URL, page refresh status, AND tab changes
   checkAndClearData()
 
   console.log('Popup initialized')
 
   // Helper function to aggressively check and clear data
+  // In the popup.js, modify the checkAndClearData function
   function checkAndClearData() {
     chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
       if (tabs && tabs[0] && tabs[0].id) {
         const currentUrl = tabs[0].url
+        currentTabId = tabs[0].id
 
-        // Request page information from background script
+        // Get stored URL from localStorage for comparison
+        const lastUrl = localStorage.getItem('lastVisitedUrl')
+        const urlChanged = lastUrl && lastUrl !== currentUrl
+
+        // IMMEDIATELY clear data if URL has changed
+        if (urlChanged) {
+          console.log(
+            'URL changed, clearing data:',
+            lastUrl,
+            ' -> ',
+            currentUrl
+          )
+          clearAllStorageData()
+          localStorage.setItem('lastVisitedUrl', currentUrl)
+        }
+
+        // Get tab info from background script
         chrome.runtime.sendMessage(
           {
-            action: 'checkPageStatus',
-            url: currentUrl,
+            action: 'checkTabStatus',
           },
-          function (response) {
-            // If any of these conditions are true, clear data:
-            // 1. URL has changed
-            // 2. Page has been refreshed
-            // 3. No recent element selection
-            if (
-              response &&
-              (response.urlChanged ||
-                response.pageRefreshed ||
-                !response.recentElementSelection)
-            ) {
-              console.log('Clearing data because:', response)
-              clearAllStorageData()
-            }
+          function (tabResponse) {
+            console.log('Tab status:', tabResponse)
+
+            // Request page information from background script
+            chrome.runtime.sendMessage(
+              {
+                action: 'checkPageStatus',
+                url: currentUrl,
+                tabId: currentTabId,
+              },
+              function (response) {
+                console.log('Page status:', response)
+
+                // Store current URL after processing
+                localStorage.setItem('lastVisitedUrl', currentUrl)
+
+                // If any of these conditions are true, clear data:
+                // 1. URL has changed
+                // 2. Tab has changed
+                // 3. Page has been refreshed
+                // 4. No recent element selection
+                if (
+                  response &&
+                  (response.urlChanged ||
+                    response.tabChanged ||
+                    response.pageRefreshed ||
+                    !response.recentElementSelection)
+                ) {
+                  console.log('Clearing data because:', response)
+                  clearAllStorageData()
+                }
+              }
+            )
           }
         )
       }
@@ -281,6 +320,9 @@ document.addEventListener('DOMContentLoaded', function () {
   // Always refresh data on popup open
   chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
     if (tabs && tabs[0] && tabs[0].id) {
+      // Store current tab ID
+      currentTabId = tabs[0].id
+
       // Initialize the default active tab
       const activeNavItem = document.querySelector('.nav-item.active')
       if (activeNavItem) {

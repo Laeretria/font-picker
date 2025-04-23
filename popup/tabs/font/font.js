@@ -31,38 +31,55 @@ class FontTab {
   }
 
   // Initialize method
+  // In the font.js file, modify the initialize method
   initialize() {
     console.log('FontTab: Initializing and clearing all values')
 
     // Clear all displayed values FIRST before any other operations
     this.clearAllFontValues()
 
-    // AGGRESSIVE CHECK: Only load data from localStorage if it has the element selection flag
-    const storedData = localStorage.getItem('selectedElementFontData')
-    if (storedData) {
-      try {
-        const parsedData = JSON.parse(storedData)
+    // AGGRESSIVE CHECK: Check if current URL matches the URL when the data was collected
+    chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+      if (tabs && tabs[0] && tabs[0].url) {
+        const currentUrl = tabs[0].url
 
-        // Only use this data if it's marked as coming from element selection
-        if (!parsedData._isFromElementSelection) {
-          console.log(
-            'FontTab: Found data without element selection flag - removing it'
-          )
-          localStorage.removeItem('selectedElementFontData')
-          if (chrome.storage && chrome.storage.local) {
-            chrome.storage.local.remove(['selectedElementFontData'])
+        // Get the URL that was stored with the font data
+        const storedData = localStorage.getItem('selectedElementFontData')
+        if (storedData) {
+          try {
+            const parsedData = JSON.parse(storedData)
+
+            // Check if there's a stored URL and if it doesn't match current URL
+            if (
+              !parsedData._sourceUrl ||
+              parsedData._sourceUrl !== currentUrl
+            ) {
+              console.log('Font data is from a different URL, clearing it')
+              localStorage.removeItem('selectedElementFontData')
+              if (chrome.storage && chrome.storage.local) {
+                chrome.storage.local.remove(['selectedElementFontData'])
+              }
+            } else if (!parsedData._isFromElementSelection) {
+              console.log(
+                'FontTab: Found data without element selection flag - removing it'
+              )
+              localStorage.removeItem('selectedElementFontData')
+              if (chrome.storage && chrome.storage.local) {
+                chrome.storage.local.remove(['selectedElementFontData'])
+              }
+            } else {
+              console.log(
+                'FontTab: Found valid element selection data, will use it'
+              )
+            }
+          } catch (e) {
+            console.error('Error parsing stored font data:', e)
+            // Remove invalid data
+            localStorage.removeItem('selectedElementFontData')
           }
-        } else {
-          console.log(
-            'FontTab: Found valid element selection data, will use it'
-          )
         }
-      } catch (e) {
-        console.error('Error parsing stored font data:', e)
-        // Remove invalid data
-        localStorage.removeItem('selectedElementFontData')
       }
-    }
+    })
 
     // Set up event listeners
     this.setupEventListeners()
