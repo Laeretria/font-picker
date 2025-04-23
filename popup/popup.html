@@ -129,8 +129,10 @@
       <div class="main-content">
         <!-- Font Tab -->
         <div class="tab-content active" id="font-tab">
-          <h2>Font Analysis</h2>
-
+          <h2>Huidige element</h2>
+          <p class="description-font-tab instruction-message">
+            Klik op "Selecteer element" om informatie te bekijken.
+          </p>
           <!-- Body Font - Restructured -->
           <div class="font-card">
             <div class="font-card-header">
@@ -154,14 +156,14 @@
                   ></path>
                 </g>
               </svg>
-              Body
+              Font
             </div>
             <div class="font-card-content">
               <!-- Main font family value -->
               <div class="font-value-container">
                 <p id="body-font" class="font-value"></p>
                 <button class="copy-font-btn copy-body-font" data-copy="">
-                  Copy
+                  Kopiëren
                 </button>
               </div>
 
@@ -169,26 +171,26 @@
               <div class="body-properties">
                 <div class="property-boxes">
                   <div class="property-item">
-                    <div class="property-label">Style</div>
+                    <div class="property-label">Stijl</div>
                     <div class="property-value" id="font-style"></div>
                   </div>
                   <div class="property-item">
-                    <div class="property-label">Weight</div>
+                    <div class="property-label">Gewicht</div>
                     <div class="property-value" id="font-weight"></div>
                   </div>
                   <div class="property-item">
-                    <div class="property-label">Size</div>
+                    <div class="property-label">Grootte</div>
                     <div class="property-value" id="font-size"></div>
                   </div>
                   <div class="property-item">
-                    <div class="property-label">Line Height</div>
+                    <div class="property-label">Lijnhoogte</div>
                     <div class="property-value" id="line-height"></div>
                   </div>
                 </div>
 
                 <!-- Font Preview inside body card -->
                 <div class="font-preview-container">
-                  <div class="preview-label">Preview</div>
+                  <div class="preview-label">Voorbeeldtekst</div>
                   <div class="font-preview" id="font-preview"></div>
                 </div>
               </div>
@@ -197,12 +199,12 @@
 
           <!-- Replace the existing Font Format Options with this CSS Snippet section -->
           <div class="font-card">
-            <div class="font-card-header">CSS Snippet</div>
+            <div class="font-card-header">CSS</div>
             <div class="font-card-content">
               <div class="css-snippet-container">
                 <pre id="css-snippet" class="css-code"></pre>
                 <button class="copy-snippet-btn" id="copy-snippet-btn">
-                  Copy CSS
+                  Kopiëren
                 </button>
               </div>
               <div class="snippet-format-options">

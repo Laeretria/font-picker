@@ -164,14 +164,13 @@
 
 /* Instruction message */
 .instruction-message {
-  background-color: #fff3cd;
-  border: 1px solid #ffeeba;
-  color: #856404;
+  background-color: var(--header-bg);
+  border: 1px solid var(--border-color);
+  color: var(--heading);
   padding: 12px 16px;
   border-radius: 6px;
-  margin-bottom: var(--card-gap);
   font-size: 14px;
-  text-align: center;
+  text-align: left;
 }
 
 /* Body properties styles */

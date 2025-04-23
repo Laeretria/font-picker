@@ -120,7 +120,7 @@ class FontTab {
       this.fontPreviewElement.style.fontFamily = ''
       this.fontPreviewElement.style.fontSize = ''
       this.fontPreviewElement.style.fontStyle = ''
-      this.fontPreviewElement.style.fontWeight = ''
+      this.fontPreviewElement.style.fontWeight = 'normal'
       this.fontPreviewElement.style.lineHeight = ''
     }
     console.log('Cleared font preview')
@@ -196,7 +196,7 @@ class FontTab {
       .writeText(text)
       .then(() => {
         // Show visual feedback on the button itself
-        button.textContent = 'Copied!'
+        button.textContent = 'Gekopieerd!'
         button.style.backgroundColor = 'var(--secondary-color)'
 
         // Reset button after 1.5 seconds
@@ -280,7 +280,7 @@ class FontTab {
         const decimal = parseInt(match[2].charAt(0), 10) // Get first decimal digit
 
         // Round up if decimal is 0.9 or higher
-        if (decimal >= 9) {
+        if (decimal >= 5) {
           return integer + 1 + 'px'
         } else {
           return integer + 'px'
@@ -311,7 +311,7 @@ class FontTab {
     this.fontPreviewElement.style.fontFamily = fontData.family || ''
     this.fontPreviewElement.style.fontSize = fontData.size || ''
     this.fontPreviewElement.style.fontStyle = fontData.style || ''
-    this.fontPreviewElement.style.fontWeight = fontData.weight || ''
+    this.fontPreviewElement.style.fontWeight = 'normal'
     this.fontPreviewElement.style.lineHeight = fontData.lineHeight || ''
   }
 
@@ -348,7 +348,7 @@ class FontTab {
         const decimal = parseInt(match[2].charAt(0), 10)
 
         // Round up if decimal is 0.9 or higher
-        if (decimal >= 9) {
+        if (decimal >= 5) {
           lineHeight = integer + 1 + 'px'
         } else {
           lineHeight = integer + 'px'
@@ -408,7 +408,7 @@ class FontTab {
         const decimal = parseInt(match[2].charAt(0), 10) // Get first decimal digit
 
         // Round up if decimal is 0.9 or higher
-        if (decimal >= 9) {
+        if (decimal >= 5) {
           lineHeight = integer + 1 + 'px'
         } else {
           lineHeight = integer + 'px'

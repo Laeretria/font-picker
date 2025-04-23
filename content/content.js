@@ -129,11 +129,20 @@ function highlightElement(e) {
   e.preventDefault()
   e.stopPropagation()
 
+  // Get the target element
+  const element = e.target
+
+  // Check if this is a text element or has text content
+  if (!isTextElement(element)) {
+    // Skip non-text elements
+    return
+  }
+
   // Remove previous highlight
   removeHighlight()
 
   // Add highlight to current element
-  highlightedElement = e.target
+  highlightedElement = element
 
   // Save the original styles to restore later
   highlightedElement._originalOutline = highlightedElement.style.outline
@@ -170,6 +179,70 @@ function cancelPicker(e) {
   }
 }
 
+// Helper function to determine if an element is a text element
+function isTextElement(element) {
+  // Skip image elements directly
+  if (element.tagName === 'IMG') {
+    return false
+  }
+
+  // Skip SVG elements
+  if (element.tagName === 'svg' || element instanceof SVGElement) {
+    return false
+  }
+
+  // Skip canvas elements
+  if (element.tagName === 'CANVAS') {
+    return false
+  }
+
+  // Skip video and audio elements
+  if (element.tagName === 'VIDEO' || element.tagName === 'AUDIO') {
+    return false
+  }
+
+  // Skip elements with background images but no text
+  const computedStyle = window.getComputedStyle(element)
+  const hasBackgroundImage = computedStyle.backgroundImage !== 'none'
+  const textContent = element.textContent.trim()
+
+  if (hasBackgroundImage && textContent === '') {
+    return false
+  }
+
+  // Check if element has visible text content
+  if (textContent === '') {
+    // No text content, but check if it's a valid container that might have text styling
+    const isTextContainer = [
+      'P',
+      'H1',
+      'H2',
+      'H3',
+      'H4',
+      'H5',
+      'H6',
+      'SPAN',
+      'A',
+      'BUTTON',
+      'LI',
+      'TD',
+      'TH',
+      'LABEL',
+      'STRONG',
+      'EM',
+      'B',
+      'I',
+    ].includes(element.tagName)
+
+    if (!isTextContainer) {
+      return false
+    }
+  }
+
+  // If we get here, it's likely a text element or container
+  return true
+}
+
 // Select element function
 function selectElement(e) {
   e.preventDefault()
@@ -178,6 +251,12 @@ function selectElement(e) {
   // Get computed styles of selected element
   const element = e.target
   const computedStyle = window.getComputedStyle(element)
+
+  // Check if this is a text element
+  if (!isTextElement(element)) {
+    // Skip selection for non-text elements
+    return
+  }
 
   // Format line height
   let lineHeight = computedStyle.lineHeight || ''
@@ -188,7 +267,7 @@ function selectElement(e) {
       const decimal = parseInt(match[2].charAt(0), 10) // Get first decimal digit
 
       // Round up if decimal is 0.9 or higher
-      if (decimal >= 9) {
+      if (decimal >= 5) {
         lineHeight = integer + 1 + 'px'
       } else {
         lineHeight = integer + 'px'
@@ -279,7 +358,7 @@ function formatLineHeight(lineHeight) {
       const decimal = parseInt(match[2].charAt(0), 10) // Get first decimal digit
 
       // Round up if decimal is 0.9 or higher
-      if (decimal >= 9) {
+      if (decimal >= 5) {
         return integer + 1 + 'px'
       } else {
         return integer + 'px'
