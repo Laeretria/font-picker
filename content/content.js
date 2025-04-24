@@ -34,6 +34,18 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
     return true
   }
 
+  if (request.action === 'analyzeHeadings') {
+    analyzeHeadings()
+      .then((result) => {
+        sendResponse({ headings: result })
+      })
+      .catch((error) => {
+        console.error('Error analyzing headings:', error)
+        sendResponse({ error: 'Failed to analyze headings' })
+      })
+    return true // Keep the message channel open for async response
+  }
+
   if (request.action === 'togglePicker') {
     toggleElementPicker()
     sendResponse({ status: 'ok' })
@@ -122,6 +134,78 @@ function toggleElementPicker() {
       indicator.remove()
     }
   }
+}
+
+// Function to analyze heading elements on the page
+async function analyzeHeadings() {
+  try {
+    const headings = []
+
+    // Get all heading elements (H1-H6)
+    const headingElements = document.querySelectorAll('h1, h2, h3, h4, h5, h6')
+
+    // Process each heading element
+    headingElements.forEach((element) => {
+      // Skip hidden or empty headings
+      if (isElementHidden(element) || !element.textContent.trim()) {
+        return
+      }
+
+      // Get computed styles
+      const computedStyle = window.getComputedStyle(element)
+
+      // Format line height as you do in other functions
+      let lineHeight = computedStyle.lineHeight || ''
+      lineHeight = formatLineHeight(lineHeight)
+
+      // Create heading data object
+      const headingData = {
+        element: element.tagName.toLowerCase(),
+        family: getActualFontFamily(element),
+        style: computedStyle.fontStyle,
+        weight: computedStyle.fontWeight,
+        size: computedStyle.fontSize,
+        lineHeight: lineHeight,
+        text:
+          element.textContent.trim().slice(0, 50) +
+          (element.textContent.trim().length > 50 ? '...' : ''),
+        index: headings.length, // Add an index to track the order
+      }
+
+      headings.push(headingData)
+    })
+
+    // Sort headings by their hierarchy (h1, h2, h3, etc.)
+    headings.sort((a, b) => {
+      // First by heading level
+      const levelA = parseInt(a.element.substring(1))
+      const levelB = parseInt(b.element.substring(1))
+
+      if (levelA !== levelB) {
+        return levelA - levelB
+      }
+
+      // If same level, sort by their order in the document
+      return a.index - b.index
+    })
+
+    return headings
+  } catch (error) {
+    console.error('Error in analyzeHeadings:', error)
+    return []
+  }
+}
+
+// Helper function to check if an element is hidden
+function isElementHidden(element) {
+  const style = window.getComputedStyle(element)
+  return (
+    style.display === 'none' ||
+    style.visibility === 'hidden' ||
+    parseFloat(style.opacity) < 0.1 ||
+    element.offsetWidth === 0 ||
+    element.offsetHeight === 0
+  )
 }
 
 // Highlight element on hover

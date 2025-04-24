@@ -1,82 +1,191 @@
-/* Overview tab styles */
-.overview-section {
-  margin-bottom: 20px;
-}
+/* Overview tab specific styles - Add this to tabs/overview/overview.css */
 
-.overview-card {
-  background-color: var(--white);
-  border-radius: 6px;
-  border: 1px solid var(--border-color);
-  overflow: hidden;
-}
-
-.overview-item {
-  padding: 12px 16px;
-  border-bottom: 1px solid var(--border-color);
-}
-
-.overview-item:last-child {
-  border-bottom: none;
-}
-
-.overview-label {
-  font-size: 12px;
-  color: var(--body);
-  margin-bottom: 4px;
-  font-family: 'Regola-Medium';
-}
-
-.overview-value {
-  font-size: 16px;
-  color: var(--heading);
-}
-
-.overview-colors {
+/* General container for headings overview */
+.headings-overview-container {
+  margin-top: 20px;
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: var(--card-gap);
 }
 
-.overview-color-section h4 {
-  margin-bottom: 10px;
-  font-size: 16px;
+/* Container for heading elements */
+.headings-container {
+  display: flex;
+  flex-direction: column;
+  gap: var(--card-gap);
+}
+
+/* Message when no headings are found */
+.no-headings-message {
+  background-color: var(--white);
+  border-radius: 8px;
+  padding: 20px;
+  text-align: center;
+  color: var(--body);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+/* Heading card styles */
+.heading-card {
+  background-color: var(--white);
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.heading-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Card header with element type */
+.heading-card .font-card-header {
+  background-color: var(--white);
+  border-bottom: 1px solid var(--border-color);
+  padding: 15px;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+}
+
+.heading-card .font-card-header svg {
+  width: 20px;
+  height: 20px;
+  margin-right: 8px;
+}
+
+/* Heading level displayed in the header */
+.heading-level {
+  font-family: 'Regola-Bold';
+  color: var(--heading);
+  margin-left: 5px;
+}
+
+/* Card content container */
+.heading-card .font-card-content {
+  padding: 15px;
+}
+
+/* Font value container */
+.heading-card .font-value-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background-color: var(--background-color);
+  padding: 10px 15px;
+  border-radius: 4px;
+  margin-bottom: 15px;
+}
+
+.heading-card .font-value {
+  font-weight: 500;
+  color: var(--heading);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 70%;
+}
+
+/* Copy button */
+.heading-card .copy-font-btn {
+  background-color: var(--primary-color);
+  color: var(--white);
+  border: none;
+  padding: 5px 10px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 12px;
+  transition: background-color 0.2s;
+}
+
+.heading-card .copy-font-btn:hover {
+  background-color: var(--secondary-color);
+}
+
+/* Properties section */
+.heading-card .body-properties {
+  margin-top: 15px;
+}
+
+/* Property boxes grid layout */
+.heading-card .property-boxes {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+  margin-bottom: 15px;
+}
+
+/* Individual property item */
+.heading-card .property-item {
+  background-color: var(--background-color);
+  padding: 10px;
+  border-radius: 4px;
+}
+
+.heading-card .property-label {
+  font-size: 12px;
+  color: var(--body);
+  margin-bottom: 5px;
+}
+
+.heading-card .property-value {
+  font-weight: 500;
   color: var(--heading);
 }
 
-.color-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
-  gap: 10px;
-}
-
-.color-swatch {
-  height: 60px;
-  border-radius: 4px;
-  position: relative;
-  overflow: hidden;
-  border: 1px solid var(--border-color);
-}
-
-.color-value {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  background-color: rgba(255, 255, 255, 0.9);
-  padding: 4px;
-  font-size: 10px;
-  text-align: center;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.no-colors-message {
-  grid-column: 1 / -1;
-  text-align: center;
+/* Preview container */
+.heading-card .font-preview-container {
+  background-color: var(--background-color);
   padding: 10px;
-  color: var(--body);
-  font-size: 14px;
-  background-color: #f8f9fa;
   border-radius: 4px;
+}
+
+.heading-card .preview-label {
+  font-size: 12px;
+  color: var(--body);
+  margin-bottom: 5px;
+}
+
+/* Heading text preview */
+.heading-card .heading-preview {
+  padding: 10px;
+  background-color: var(--white);
+  border-radius: 4px;
+  border: 1px solid var(--border-color);
+  min-height: 50px;
+  display: flex;
+  align-items: center;
+}
+
+/* Custom styling for different heading levels */
+.heading-card[data-level='h1'] .heading-preview {
+  font-size: 24px;
+}
+
+.heading-card[data-level='h2'] .heading-preview {
+  font-size: 22px;
+}
+
+.heading-card[data-level='h3'] .heading-preview {
+  font-size: 20px;
+}
+
+.heading-card[data-level='h4'] .heading-preview {
+  font-size: 18px;
+}
+
+.heading-card[data-level='h5'] .heading-preview {
+  font-size: 16px;
+}
+
+.heading-card[data-level='h6'] .heading-preview {
+  font-size: 14px;
+}
+
+/* Responsive adjustments for smaller screens */
+@media (max-width: 600px) {
+  .heading-card .property-boxes {
+    grid-template-columns: 1fr;
+  }
 }
