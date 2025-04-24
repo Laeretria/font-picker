@@ -9,6 +9,11 @@ class OverviewTab {
   }
 
   initialize() {
+    // Make sure to add ultra-compact class to the container
+    if (this.headingsContainer) {
+      this.headingsContainer.classList.add('ultra-compact')
+    }
+
     // Immediately analyze the current page for headings
     this.analyzeCurrentPageHeadings()
 
@@ -140,15 +145,14 @@ class OverviewTab {
   showNoHeadingsMessage(message) {
     if (this.headingsContainer) {
       this.headingsContainer.innerHTML = `
-        <div class="no-headings-message">
-          ${message}
-        </div>
-      `
+      <div class="no-headings-message ultra-compact">
+        ${message}
+      </div>
+    `
     }
   }
 
-  // Replace the addHeadingElement method with this ultra-compact version
-
+  // Modified addHeadingElement method with the copy button removed
   addHeadingElement(headingData) {
     if (!this.headingsContainer) return
 
@@ -174,7 +178,7 @@ class OverviewTab {
     const headingDetails = document.createElement('div')
     headingDetails.className = 'heading-details'
 
-    // Font family row with copy button
+    // Font family row without copy button
     const fontFamilyRow = document.createElement('div')
     fontFamilyRow.className = 'font-family-row'
 
@@ -183,18 +187,6 @@ class OverviewTab {
     fontFamily.textContent = headingData.family || 'Unknown font'
     fontFamilyRow.appendChild(fontFamily)
 
-    const copyBtn = document.createElement('button')
-    copyBtn.className = 'copy-btn'
-    copyBtn.textContent = 'Kopiëren'
-    copyBtn.dataset.copy = headingData.family || ''
-    copyBtn.addEventListener('click', () => {
-      navigator.clipboard.writeText(copyBtn.dataset.copy)
-      copyBtn.textContent = 'Gekopieerd!'
-      setTimeout(() => {
-        copyBtn.textContent = 'Kopiëren'
-      }, 2000)
-    })
-    fontFamilyRow.appendChild(copyBtn)
     headingDetails.appendChild(fontFamilyRow)
 
     // Properties grid
@@ -231,27 +223,6 @@ class OverviewTab {
 
     headingDetails.appendChild(propertiesGrid)
 
-    // Preview section
-    const previewSection = document.createElement('div')
-    previewSection.className = 'preview-section'
-
-    const previewLabel = document.createElement('div')
-    previewLabel.className = 'preview-label'
-    previewLabel.textContent = 'Titel'
-    previewSection.appendChild(previewLabel)
-
-    const previewText = document.createElement('div')
-    previewText.className = 'preview-text'
-    previewText.textContent = headingData.text || 'Sample text'
-
-    // Apply only font family and size to preview text
-    previewText.style.fontFamily = headingData.family || ''
-    previewText.style.fontStyle = headingData.style || ''
-    // Removed weight as requested
-
-    previewSection.appendChild(previewText)
-    headingDetails.appendChild(previewSection)
-
     // Assemble the card
     cardLayout.appendChild(headingType)
     cardLayout.appendChild(headingDetails)
@@ -277,36 +248,6 @@ class OverviewTab {
     property.appendChild(propertyValue)
 
     return property
-  }
-
-  // Update the showNoHeadingsMessage method
-  showNoHeadingsMessage(message) {
-    if (this.headingsContainer) {
-      this.headingsContainer.innerHTML = `
-      <div class="no-headings-message ultra-compact">
-        ${message}
-      </div>
-    `
-    }
-  }
-
-  // Add this to your initialize method
-  initialize() {
-    // Make sure to add ultra-compact class to the container
-    if (this.headingsContainer) {
-      this.headingsContainer.classList.add('ultra-compact')
-    }
-
-    // Rest of your initialization code
-    this.analyzeCurrentPageHeadings()
-
-    // Set up event listener for tab changes or page refreshes
-    chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
-      if (changeInfo.status === 'complete') {
-        // Refresh headings data when the page is loaded
-        this.analyzeCurrentPageHeadings()
-      }
-    })
   }
 
   createPropertyItem(label, value) {

@@ -84,9 +84,6 @@ class FontTab {
     // Set up event listeners
     this.setupEventListeners()
 
-    // Add copy buttons with empty values
-    this.addCopyButtons()
-
     // Explicitly reset stored data
     this.currentFontData = {
       body: {
@@ -128,22 +125,10 @@ class FontTab {
     // Clear CSS snippet
     if (this.cssSnippetElement) this.cssSnippetElement.textContent = ''
     console.log('Cleared CSS snippet')
-
-    // Reset copy buttons' data attributes
-    const bodyCopyBtn = document.querySelector('.copy-body-font')
-    if (bodyCopyBtn) bodyCopyBtn.dataset.copy = ''
   }
 
   setupEventListeners() {
-    // Add event listeners for copy buttons and other interactions
-    document.querySelectorAll('.copy-font-btn').forEach((btn) => {
-      btn.addEventListener('click', (e) => {
-        const textToCopy = e.target.dataset.copy
-        this.copyToClipboard(textToCopy, e)
-      })
-    })
-
-    // Add event listener for copy snippet button
+    // Add event listener for copy snippet button - KEEP THIS ONE
     if (this.copySnippetButton) {
       this.copySnippetButton.addEventListener('click', (e) => {
         const textToCopy = this.cssSnippetElement.textContent
@@ -164,16 +149,17 @@ class FontTab {
           option.classList.add('active')
           this.currentSnippetFormat = option.dataset.format
           this.updateCSSSnippet()
+
+          // Add this new code to adjust the button position
+          if (this.copySnippetButton) {
+            if (option.dataset.format === 'variable') {
+              this.copySnippetButton.style.right = '20px'
+            } else {
+              this.copySnippetButton.style.right = '5px'
+            }
+          }
         })
       })
-  }
-
-  addCopyButtons() {
-    // Update the data-copy attribute values
-    const bodyCopyBtn = document.querySelector('.copy-body-font')
-    if (bodyCopyBtn) {
-      bodyCopyBtn.dataset.copy = this.bodyFontElement.textContent || ''
-    }
   }
 
   copyToClipboard(text, event) {
@@ -235,8 +221,6 @@ class FontTab {
             this.currentFontData = response.fonts
             // Update the CSS snippet
             this.updateCSSSnippet()
-            // Update copy buttons after fonts are loaded
-            this.addCopyButtons()
           }
         }
       )
@@ -262,11 +246,8 @@ class FontTab {
     // Update font preview
     this.updateFontPreview(fontData.body)
 
-    // Update copy buttons
-    const bodyCopyBtn = document.querySelector('.copy-body-font')
-    if (bodyCopyBtn) {
-      bodyCopyBtn.dataset.copy = fontData.body.family || ''
-    }
+    // Update CSS snippet
+    this.updateCSSSnippet()
   }
 
   // Helper method for formatting line-height
@@ -380,9 +361,6 @@ class FontTab {
 
     // Update CSS snippet
     this.updateCSSSnippet()
-
-    // Update copy buttons
-    this.addCopyButtons()
   }
 
   // Update CSS snippet method

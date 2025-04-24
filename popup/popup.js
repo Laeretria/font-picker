@@ -281,12 +281,6 @@ document.addEventListener('DOMContentLoaded', function () {
     if (document.getElementById('css-snippet')) {
       document.getElementById('css-snippet').textContent = ''
     }
-
-    // Also clear copy button data attributes
-    const bodyCopyBtn = document.querySelector('.copy-body-font')
-    if (bodyCopyBtn) {
-      bodyCopyBtn.dataset.copy = ''
-    }
   }
 
   // Element picker functionality
