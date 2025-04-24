@@ -550,7 +550,7 @@ class ColorsTab {
       toast.style.display = 'flex'
       toast.style.alignItems = 'center'
       toast.style.padding = '8px 12px'
-      toast.style.backgroundColor = 'rgba(50, 50, 50, 0.9)'
+      toast.style.backgroundColor = '#000'
       toast.style.color = 'white'
       toast.style.borderRadius = '4px'
       toast.style.boxShadow = '0 2px 10px rgba(0, 0, 0, 0.2)'
