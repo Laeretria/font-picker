@@ -187,7 +187,8 @@
   margin-bottom: 15px;
 }
 
-.property-item {
+.property-item,
+.font-preview-container {
   background-color: var(--header-bg);
   border-radius: 4px;
   padding: 8px 12px;
@@ -206,19 +207,14 @@
   color: var(--body);
 }
 
-.font-preview-container {
-  margin-top: 10px;
-}
-
 .font-preview {
   background-color: var(--header-bg);
-  border-radius: 4px;
-  padding: 12px;
-  min-height: 60px;
+  padding: 12px 12px 12px 0px;
+  min-height: 50px;
   font-size: 14px !important;
   line-height: 1.5 !important;
   display: flex;
-  align-items: center;
-  justify-content: center;
-  text-align: center;
+  align-items: start;
+  justify-content: left;
+  text-align: left;
 }
