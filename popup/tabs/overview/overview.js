@@ -147,130 +147,166 @@ class OverviewTab {
     }
   }
 
+  // Replace the addHeadingElement method with this ultra-compact version
+
   addHeadingElement(headingData) {
     if (!this.headingsContainer) return
 
-    // Create new heading card
+    // Create new ultra-compact heading card
     const headingCard = document.createElement('div')
-    headingCard.className = 'font-card heading-card'
-    headingCard.dataset.level = headingData.element.toLowerCase() // Add data attribute for level-specific styling
+    headingCard.className = 'heading-card ultra-compact'
+    headingCard.dataset.level = headingData.element.toLowerCase()
 
-    // Create card header
-    const cardHeader = document.createElement('div')
-    cardHeader.className = 'font-card-header'
+    // Create horizontal layout container
+    const cardLayout = document.createElement('div')
+    cardLayout.className = 'card-layout'
 
-    // Add header icon
-    cardHeader.innerHTML = `
-      <svg fill="#1448ff" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" stroke="#1448ff" stroke-width="0.8879999999999999">
-        <g id="SVGRepo_bgCarrier" stroke-width="0"></g>
-        <g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g>
-        <g id="SVGRepo_iconCarrier">
-          <path fill-rule="evenodd" d="M11,9 L9,9 L9,10 L7,10 L7,7 L17,7 L17,10 L15,10 L15,9 L13,9 L13,15 L14,15 L14,17 L10,17 L10,15 L11,15 L11,9 Z M4,2 L20,2 C21.1045695,2 22,2.8954305 22,4 L22,20 C22,21.1045695 21.1045695,22 20,22 L4,22 C2.8954305,22 2,21.1045695 2,20 L2,4 C2,2.8954305 2.8954305,2 4,2 Z M4,4 L4,20 L20,20 L20,4 L4,4 Z"></path>
-        </g>
-      </svg>
-    `
+    // Left column - heading type
+    const headingType = document.createElement('div')
+    headingType.className = 'heading-type'
 
-    // Add heading level (H1, H2, etc)
-    const headingLevel = document.createElement('span')
+    const headingLevel = document.createElement('div')
     headingLevel.className = 'heading-level'
     headingLevel.textContent = headingData.element.toUpperCase()
-    cardHeader.appendChild(headingLevel)
+    headingType.appendChild(headingLevel)
 
-    headingCard.appendChild(cardHeader)
+    // Right column - heading details
+    const headingDetails = document.createElement('div')
+    headingDetails.className = 'heading-details'
 
-    // Create card content
-    const cardContent = document.createElement('div')
-    cardContent.className = 'font-card-content'
+    // Font family row with copy button
+    const fontFamilyRow = document.createElement('div')
+    fontFamilyRow.className = 'font-family-row'
 
-    // Font family container
-    const fontValueContainer = document.createElement('div')
-    fontValueContainer.className = 'font-value-container'
+    const fontFamily = document.createElement('div')
+    fontFamily.className = 'font-family'
+    fontFamily.textContent = headingData.family || 'Unknown font'
+    fontFamilyRow.appendChild(fontFamily)
 
-    const fontValue = document.createElement('p')
-    fontValue.className = 'font-value'
-    fontValue.textContent = headingData.family || 'Unknown font'
-    fontValueContainer.appendChild(fontValue)
-
-    // Copy button
-    const copyButton = document.createElement('button')
-    copyButton.className = 'copy-font-btn'
-    copyButton.dataset.copy = headingData.family || ''
-    copyButton.textContent = 'Kopiëren'
-    copyButton.addEventListener('click', () => {
-      navigator.clipboard.writeText(copyButton.dataset.copy)
-      copyButton.textContent = 'Gekopieerd!'
+    const copyBtn = document.createElement('button')
+    copyBtn.className = 'copy-btn'
+    copyBtn.textContent = 'Kopiëren'
+    copyBtn.dataset.copy = headingData.family || ''
+    copyBtn.addEventListener('click', () => {
+      navigator.clipboard.writeText(copyBtn.dataset.copy)
+      copyBtn.textContent = 'Gekopieerd!'
       setTimeout(() => {
-        copyButton.textContent = 'Kopiëren'
+        copyBtn.textContent = 'Kopiëren'
       }, 2000)
     })
-    fontValueContainer.appendChild(copyButton)
+    fontFamilyRow.appendChild(copyBtn)
+    headingDetails.appendChild(fontFamilyRow)
 
-    cardContent.appendChild(fontValueContainer)
-
-    // Property boxes for style, weight, size, line-height
-    const propertiesDiv = document.createElement('div')
-    propertiesDiv.className = 'body-properties'
-
-    const propertyBoxes = document.createElement('div')
-    propertyBoxes.className = 'property-boxes'
+    // Properties grid
+    const propertiesGrid = document.createElement('div')
+    propertiesGrid.className = 'properties-grid'
 
     // Style property
-    const styleItem = this.createPropertyItem(
+    const styleProperty = this.createUltraCompactProperty(
       'Stijl',
       headingData.style || 'normal'
     )
-    propertyBoxes.appendChild(styleItem)
+    propertiesGrid.appendChild(styleProperty)
 
     // Weight property
-    const weightItem = this.createPropertyItem(
+    const weightProperty = this.createUltraCompactProperty(
       'Gewicht',
       headingData.weight || '400'
     )
-    propertyBoxes.appendChild(weightItem)
+    propertiesGrid.appendChild(weightProperty)
 
     // Size property
-    const sizeItem = this.createPropertyItem(
+    const sizeProperty = this.createUltraCompactProperty(
       'Grootte',
       headingData.size || '16px'
     )
-    propertyBoxes.appendChild(sizeItem)
+    propertiesGrid.appendChild(sizeProperty)
 
     // Line height property
-    const lineHeightItem = this.createPropertyItem(
+    const lineHeightProperty = this.createUltraCompactProperty(
       'Lijnhoogte',
       headingData.lineHeight || 'normal'
     )
-    propertyBoxes.appendChild(lineHeightItem)
+    propertiesGrid.appendChild(lineHeightProperty)
 
-    propertiesDiv.appendChild(propertyBoxes)
+    headingDetails.appendChild(propertiesGrid)
 
-    // Preview container
-    const previewContainer = document.createElement('div')
-    previewContainer.className = 'font-preview-container'
+    // Preview section
+    const previewSection = document.createElement('div')
+    previewSection.className = 'preview-section'
 
     const previewLabel = document.createElement('div')
     previewLabel.className = 'preview-label'
     previewLabel.textContent = 'Titel'
-    previewContainer.appendChild(previewLabel)
+    previewSection.appendChild(previewLabel)
 
-    const fontPreview = document.createElement('div')
-    fontPreview.className = 'font-preview heading-preview'
-    fontPreview.textContent = headingData.text || 'Sample text'
+    const previewText = document.createElement('div')
+    previewText.className = 'preview-text'
+    previewText.textContent = headingData.text || 'Sample text'
 
-    // Apply the font styles to the preview
-    fontPreview.style.fontFamily = headingData.family || ''
-    fontPreview.style.fontSize = headingData.size || ''
-    fontPreview.style.fontStyle = headingData.style || ''
-    fontPreview.style.lineHeight = headingData.lineHeight || ''
+    // Apply only font family and size to preview text
+    previewText.style.fontFamily = headingData.family || ''
+    previewText.style.fontStyle = headingData.style || ''
+    // Removed weight as requested
 
-    previewContainer.appendChild(fontPreview)
+    previewSection.appendChild(previewText)
+    headingDetails.appendChild(previewSection)
 
-    propertiesDiv.appendChild(previewContainer)
-    cardContent.appendChild(propertiesDiv)
-    headingCard.appendChild(cardContent)
+    // Assemble the card
+    cardLayout.appendChild(headingType)
+    cardLayout.appendChild(headingDetails)
+    headingCard.appendChild(cardLayout)
 
     // Add the card to the container
     this.headingsContainer.appendChild(headingCard)
+  }
+
+  // Helper method for creating ultra-compact property items
+  createUltraCompactProperty(label, value) {
+    const property = document.createElement('div')
+    property.className = 'property'
+
+    const propertyLabel = document.createElement('div')
+    propertyLabel.className = 'property-label'
+    propertyLabel.textContent = label
+    property.appendChild(propertyLabel)
+
+    const propertyValue = document.createElement('div')
+    propertyValue.className = 'property-value'
+    propertyValue.textContent = value
+    property.appendChild(propertyValue)
+
+    return property
+  }
+
+  // Update the showNoHeadingsMessage method
+  showNoHeadingsMessage(message) {
+    if (this.headingsContainer) {
+      this.headingsContainer.innerHTML = `
+      <div class="no-headings-message ultra-compact">
+        ${message}
+      </div>
+    `
+    }
+  }
+
+  // Add this to your initialize method
+  initialize() {
+    // Make sure to add ultra-compact class to the container
+    if (this.headingsContainer) {
+      this.headingsContainer.classList.add('ultra-compact')
+    }
+
+    // Rest of your initialization code
+    this.analyzeCurrentPageHeadings()
+
+    // Set up event listener for tab changes or page refreshes
+    chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
+      if (changeInfo.status === 'complete') {
+        // Refresh headings data when the page is loaded
+        this.analyzeCurrentPageHeadings()
+      }
+    })
   }
 
   createPropertyItem(label, value) {

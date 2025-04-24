@@ -1,191 +1,152 @@
-/* Overview tab specific styles - Add this to tabs/overview/overview.css */
+/* Ultra compact styles for heading overview - add to overview.css */
 
-/* General container for headings overview */
-.headings-overview-container {
-  margin-top: 20px;
+/* Container for all headings */
+.headings-container.ultra-compact {
   display: flex;
   flex-direction: column;
-  gap: var(--card-gap);
+  gap: 12px;
 }
 
-/* Container for heading elements */
-.headings-container {
-  display: flex;
-  flex-direction: column;
-  gap: var(--card-gap);
-}
-
-/* Message when no headings are found */
-.no-headings-message {
+/* Ultra compact card */
+.heading-card.ultra-compact {
   background-color: var(--white);
-  border-radius: 8px;
-  padding: 20px;
-  text-align: center;
-  color: var(--body);
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-}
-
-/* Heading card styles */
-.heading-card {
-  background-color: var(--white);
-  border-radius: 8px;
+  border-radius: 6px;
   overflow: hidden;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  border: 1px solid var(--border-color);
 }
 
-.heading-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+/* Horizontal layout for card content */
+.heading-card.ultra-compact .card-layout {
+  display: flex;
+  align-items: stretch;
 }
 
-/* Card header with element type */
-.heading-card .font-card-header {
-  background-color: var(--white);
-  border-bottom: 1px solid var(--border-color);
-  padding: 15px;
-  font-weight: 500;
+/* Left column - heading type */
+.heading-card.ultra-compact .heading-type {
   display: flex;
   align-items: center;
+  justify-content: center;
+  background-color: var(--header-bg);
+  padding: 8px;
+  width: 40px;
+  border-right: 1px solid var(--border-color);
 }
 
-.heading-card .font-card-header svg {
-  width: 20px;
-  height: 20px;
-  margin-right: 8px;
-}
-
-/* Heading level displayed in the header */
-.heading-level {
+.heading-card.ultra-compact .heading-level {
   font-family: 'Regola-Bold';
-  color: var(--heading);
-  margin-left: 5px;
+  font-size: 14px;
+  color: var(--primary-color);
 }
 
-/* Card content container */
-.heading-card .font-card-content {
-  padding: 15px;
+/* Right column - heading details */
+.heading-card.ultra-compact .heading-details {
+  flex: 1;
+  padding: 8px 12px;
 }
 
-/* Font value container */
-.heading-card .font-value-container {
+/* Font family row with copy button */
+.heading-card.ultra-compact .font-family-row {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background-color: var(--background-color);
-  padding: 10px 15px;
-  border-radius: 4px;
-  margin-bottom: 15px;
+  margin-bottom: 6px;
 }
 
-.heading-card .font-value {
+.heading-card.ultra-compact .font-family {
   font-weight: 500;
+  font-size: 13px;
   color: var(--heading);
+  white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  white-space: nowrap;
-  max-width: 70%;
+  max-width: 65%;
 }
 
-/* Copy button */
-.heading-card .copy-font-btn {
+.heading-card.ultra-compact .copy-btn {
   background-color: var(--primary-color);
-  color: var(--white);
+  color: white;
   border: none;
-  padding: 5px 10px;
-  border-radius: 4px;
+  border-radius: 3px;
+  font-size: 11px;
+  padding: 3px 6px;
   cursor: pointer;
-  font-size: 12px;
   transition: background-color 0.2s;
 }
 
-.heading-card .copy-font-btn:hover {
+.heading-card.ultra-compact .copy-btn:hover {
   background-color: var(--secondary-color);
 }
 
-/* Properties section */
-.heading-card .body-properties {
-  margin-top: 15px;
-}
-
-/* Property boxes grid layout */
-.heading-card .property-boxes {
+/* Properties grid */
+.heading-card.ultra-compact .properties-grid {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 10px;
-  margin-bottom: 15px;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6px;
+  margin-bottom: 6px;
 }
 
-/* Individual property item */
-.heading-card .property-item {
-  background-color: var(--background-color);
-  padding: 10px;
-  border-radius: 4px;
+.heading-card.ultra-compact .property {
+  display: flex;
+  flex-direction: column;
 }
 
-.heading-card .property-label {
-  font-size: 12px;
+.heading-card.ultra-compact .property-label {
+  font-size: 10px;
   color: var(--body);
-  margin-bottom: 5px;
+  margin-bottom: 2px;
 }
 
-.heading-card .property-value {
-  font-weight: 500;
+.heading-card.ultra-compact .property-value {
+  font-size: 12px;
   color: var(--heading);
 }
 
-/* Preview container */
-.heading-card .font-preview-container {
-  background-color: var(--background-color);
-  padding: 10px;
-  border-radius: 4px;
+/* Preview section */
+.heading-card.ultra-compact .preview-section {
+  background-color: var(--header-bg);
+  border-radius: 6px;
+  padding: 6px;
+  margin-top: 6px;
 }
 
-.heading-card .preview-label {
-  font-size: 12px;
+.heading-card.ultra-compact .preview-label {
+  font-size: 10px;
   color: var(--body);
-  margin-bottom: 5px;
+  margin-bottom: 2px;
 }
 
-/* Heading text preview */
-.heading-card .heading-preview {
-  padding: 10px;
-  background-color: var(--white);
-  border-radius: 4px;
+.heading-card.ultra-compact .preview-text {
+  font-size: 12px;
+  background-color: white;
+  border-radius: 6px;
+  padding: 4px 6px;
   border: 1px solid var(--border-color);
-  min-height: 50px;
+  min-height: 26px;
   display: flex;
   align-items: center;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
-/* Custom styling for different heading levels */
-.heading-card[data-level='h1'] .heading-preview {
-  font-size: 24px;
+.preview-text {
+  background-color: transparent !important;
+  border: none !important;
 }
 
-.heading-card[data-level='h2'] .heading-preview {
-  font-size: 22px;
+/* Loading state */
+.loading-message.ultra-compact {
+  font-size: 13px;
+  padding: 12px;
 }
 
-.heading-card[data-level='h3'] .heading-preview {
-  font-size: 20px;
+/* No headings message */
+.no-headings-message.ultra-compact {
+  font-size: 13px;
+  padding: 12px;
 }
 
-.heading-card[data-level='h4'] .heading-preview {
-  font-size: 18px;
-}
-
-.heading-card[data-level='h5'] .heading-preview {
-  font-size: 16px;
-}
-
-.heading-card[data-level='h6'] .heading-preview {
-  font-size: 14px;
-}
-
-/* Responsive adjustments for smaller screens */
-@media (max-width: 600px) {
-  .heading-card .property-boxes {
-    grid-template-columns: 1fr;
-  }
+p.description-font-tab.instruction-message.overview {
+  margin-bottom: 12px;
+  margin-top: 12px;
 }
