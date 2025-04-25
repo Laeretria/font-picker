@@ -190,59 +190,55 @@ class ColorsTab {
 
         startAngle = endAngle
       })
+      // Remove any existing indicator containers
+      const existingIndicator = document.getElementById(
+        'color-indicator-container'
+      )
+      if (existingIndicator) {
+        existingIndicator.remove()
+      }
 
-      // Add inverted L-shaped indicator for the most used color (at 12 o'clock)
+      // Add external HTML indicator for the most used color
       if (sortedColors.length > 0) {
         const mostUsedColor = sortedColors[0]
 
-        // Create an inverted L-shaped indicator group
-        const indicatorGroup = document.createElementNS(
-          'http://www.w3.org/2000/svg',
-          'g'
-        )
-        indicatorGroup.setAttribute('id', 'color-indicator')
+        // Create a container for the indicator and text
+        const indicatorContainer = document.createElement('div')
+        indicatorContainer.id = 'color-indicator-container'
 
-        // Horizontal line at the top
-        const horizontalLine = document.createElementNS(
-          'http://www.w3.org/2000/svg',
-          'line'
-        )
-        horizontalLine.setAttribute('x1', (centerX - 15).toString())
-        horizontalLine.setAttribute('y1', (centerY - radius - 10).toString())
-        horizontalLine.setAttribute('x2', centerX.toString())
-        horizontalLine.setAttribute('y2', (centerY - radius - 10).toString())
-        horizontalLine.setAttribute('stroke', '#000')
-        horizontalLine.setAttribute('stroke-width', '1')
-        indicatorGroup.appendChild(horizontalLine)
+        // Position it absolutely within the color wheel container
+        indicatorContainer.style.position = 'absolute'
+        indicatorContainer.style.top = '0px'
+        indicatorContainer.style.left = '64%'
+        indicatorContainer.style.transform = 'translateX(-50%)'
+        indicatorContainer.style.display = 'flex'
+        indicatorContainer.style.alignItems = 'center'
+        indicatorContainer.style.zIndex = '10'
 
-        // Vertical line extending down from the left end of horizontal line
-        const verticalLine = document.createElementNS(
-          'http://www.w3.org/2000/svg',
-          'line'
-        )
-        verticalLine.setAttribute('x1', (centerX - 15).toString())
-        verticalLine.setAttribute('y1', (centerY - radius - 10).toString())
-        verticalLine.setAttribute('x2', (centerX - 15).toString())
-        verticalLine.setAttribute('y2', (centerY - radius + 5).toString())
-        verticalLine.setAttribute('stroke', '#000')
-        verticalLine.setAttribute('stroke-width', '1')
-        indicatorGroup.appendChild(verticalLine)
+        // Create the image element
+        const indicatorImg = document.createElement('img')
+        indicatorImg.src = '/assets/images/nodes-black.png' // Your PNG path here
+        indicatorImg.style.width = '24px'
+        indicatorImg.style.height = '24px'
+        indicatorImg.style.marginRight = '5px'
 
-        // Add color text label next to the horizontal line
-        const text = document.createElementNS(
-          'http://www.w3.org/2000/svg',
-          'text'
-        )
-        text.setAttribute('x', (centerX - 13).toString())
-        text.setAttribute('y', (centerY - radius - 6).toString())
-        text.setAttribute('text-anchor', 'start')
-        text.setAttribute('fill', '#000')
-        text.setAttribute('font-size', '4')
-        text.setAttribute('id', 'color-indicator-text')
-        text.textContent = this.formatColor(mostUsedColor)
-        indicatorGroup.appendChild(text)
+        // Create the color code text element
+        const colorText = document.createElement('span')
+        colorText.id = 'color-indicator-text'
+        colorText.textContent = this.formatColor(mostUsedColor)
+        colorText.style.fontFamily = 'Regola-Regular, sans-serif'
+        colorText.style.fontSize = '14px'
+        colorText.style.paddingBottom = '20px'
 
-        svg.appendChild(indicatorGroup)
+        // Add elements to the container
+        indicatorContainer.appendChild(indicatorImg)
+        indicatorContainer.appendChild(colorText)
+
+        // Make sure the color wheel container has position relative
+        this.colorWheelElement.style.position = 'relative'
+
+        // Add the container to the DOM
+        this.colorWheelElement.appendChild(indicatorContainer)
       }
     } else {
       // No colors message

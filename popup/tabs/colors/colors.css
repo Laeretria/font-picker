@@ -283,3 +283,33 @@
   color: #666;
   margin: 10px 0 5px;
 }
+
+/* Color indicator container styles */
+#color-indicator-container {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  padding: 0;
+  z-index: 10;
+  background-color: transparent;
+}
+
+#color-indicator-container img {
+  width: 12px;
+  height: 20px;
+  margin-right: 5px;
+}
+
+#color-indicator-text {
+  font-family: 'Regola-Regular', sans-serif;
+  font-size: 14px;
+  color: #333;
+}
+
+/* Make sure color wheel container has position relative */
+.color-wheel {
+  position: relative;
+}
