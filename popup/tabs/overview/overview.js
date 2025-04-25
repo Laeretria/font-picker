@@ -78,7 +78,7 @@ class OverviewTab {
             )
           })
 
-          // Wait for both promises to resolve
+          // Modified section of the Promise.all handler in the analyzeCurrentPageHeadingsAndBody method
           Promise.all([bodyFontPromise, headingsPromise])
             .then(([bodyFontData, headingsData]) => {
               // Clear container before adding content
@@ -86,14 +86,7 @@ class OverviewTab {
 
               let contentAdded = false
 
-              // Add the body font data first (if available)
-              if (bodyFontData) {
-                console.log('Adding body font element with data:', bodyFontData)
-                this.addBodyFontElement(bodyFontData)
-                contentAdded = true
-              }
-
-              // Add the headings
+              // Add the headings FIRST
               if (headingsData && headingsData.length > 0) {
                 // Process unique heading levels - take only first of each type
                 const uniqueHeadings = this.getUniqueHeadingLevels(headingsData)
@@ -105,6 +98,13 @@ class OverviewTab {
                   })
                   contentAdded = true
                 }
+              }
+
+              // Add the body font data LAST (if available)
+              if (bodyFontData) {
+                console.log('Adding body font element with data:', bodyFontData)
+                this.addBodyFontElement(bodyFontData)
+                contentAdded = true
               }
 
               // Show message if no content was added
