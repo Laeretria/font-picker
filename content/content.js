@@ -91,6 +91,16 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
         sendResponse({ error: 'Failed to analyze page' })
       })
     return true // Keep the message channel open for async response
+  } else if (request.action === 'analyzeBodyFont') {
+    analyzeBodyFont()
+      .then((result) => {
+        sendResponse({ bodyFont: result })
+      })
+      .catch((error) => {
+        console.error('Error analyzing body font:', error)
+        sendResponse({ error: 'Failed to analyze body font' })
+      })
+    return true // Keep the message channel open for async response
   }
 })
 
@@ -559,6 +569,118 @@ async function analyzeFonts() {
         lineHeight: '24px',
         _isFromElementSelection: false, // Indicate this is NOT from element selection
       },
+    }
+  }
+}
+
+// New function to specifically analyze body font with the accurate method
+async function analyzeBodyFont() {
+  try {
+    // Find actual body text elements
+    const bodyElements = document.querySelectorAll(
+      'p, article p, main p, .content p, .main-content p, #content p, .article p'
+    )
+
+    let bodyFontData = {
+      family: 'Default font',
+      style: 'normal',
+      weight: '400',
+      size: '16px',
+      lineHeight: '24px',
+    }
+
+    // If no specific elements found, try a broader selection
+    if (bodyElements.length === 0) {
+      console.log('No specific body elements found, checking broader selectors')
+      const allParagraphs = document.querySelectorAll('p')
+
+      if (allParagraphs.length > 0) {
+        // Sort by content length to prioritize elements with more text
+        const textElements = Array.from(allParagraphs).filter((el) => {
+          const text = el.textContent.trim()
+          return text.length > 20 // Element should have a reasonable amount of text
+        })
+
+        if (textElements.length > 0) {
+          // Sort by content length to prioritize elements with more text
+          textElements.sort(
+            (a, b) => b.textContent.length - a.textContent.length
+          )
+
+          // Get the element with the most text content (likely a main paragraph)
+          const mainTextElement = textElements[0]
+
+          // Get computed styles
+          const computedStyle = window.getComputedStyle(mainTextElement)
+
+          // Get font data, using the more accurate getActualFontFamily function
+          bodyFontData = {
+            family: getActualFontFamily(mainTextElement),
+            style: computedStyle.fontStyle,
+            weight: computedStyle.fontWeight,
+            size: computedStyle.fontSize,
+            lineHeight: formatLineHeight(computedStyle.lineHeight || ''),
+            isAccurate: true, // Flag indicating this used the accurate method
+          }
+        }
+      }
+    } else {
+      // Filter to get elements that actually contain text
+      const textElements = Array.from(bodyElements).filter((el) => {
+        // Check if element contains actual text content, not just whitespace
+        const text = el.textContent.trim()
+        return text.length > 20 // Element should have a reasonable amount of text
+      })
+
+      if (textElements.length > 0) {
+        // Sort by content length to prioritize elements with more text
+        textElements.sort((a, b) => b.textContent.length - a.textContent.length)
+
+        // Get the element with the most text content (likely a main paragraph)
+        const mainTextElement = textElements[0]
+
+        // Get computed styles
+        const computedStyle = window.getComputedStyle(mainTextElement)
+
+        // Get font data, using the more accurate getActualFontFamily function
+        bodyFontData = {
+          family: getActualFontFamily(mainTextElement),
+          style: computedStyle.fontStyle,
+          weight: computedStyle.fontWeight,
+          size: computedStyle.fontSize,
+          lineHeight: formatLineHeight(computedStyle.lineHeight || ''),
+          isAccurate: true, // Flag indicating this used the accurate method
+        }
+      }
+    }
+
+    // If still no specific elements found, fall back to the body element
+    if (!bodyFontData.isAccurate) {
+      console.log('Falling back to body element')
+      const bodyElement = document.body
+      const computedStyle = window.getComputedStyle(bodyElement)
+
+      bodyFontData = {
+        family: getActualFontFamily(bodyElement),
+        style: computedStyle.fontStyle,
+        weight: computedStyle.fontWeight,
+        size: computedStyle.fontSize,
+        lineHeight: formatLineHeight(computedStyle.lineHeight || ''),
+        isAccurate: true, // Flag indicating this used the accurate method
+      }
+    }
+
+    return bodyFontData
+  } catch (error) {
+    console.error('Error in analyzeBodyFont:', error)
+    // Return fallback data
+    return {
+      family: 'Error analyzing',
+      style: 'normal',
+      weight: '400',
+      size: '16px',
+      lineHeight: '24px',
+      isAccurate: false,
     }
   }
 }

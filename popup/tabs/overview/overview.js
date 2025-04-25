@@ -14,23 +14,25 @@ class OverviewTab {
       this.headingsContainer.classList.add('ultra-compact')
     }
 
-    // Immediately analyze the current page for headings
-    this.analyzeCurrentPageHeadings()
+    console.log('OverviewTab initialized, analyzing page...')
+
+    // Immediately analyze the current page for headings and body font
+    this.analyzeCurrentPageHeadingsAndBody()
 
     // Set up event listener for tab changes or page refreshes
     chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
       if (changeInfo.status === 'complete') {
         // Refresh headings data when the page is loaded
-        this.analyzeCurrentPageHeadings()
+        this.analyzeCurrentPageHeadingsAndBody()
       }
     })
   }
 
-  analyzeCurrentPageHeadings() {
+  analyzeCurrentPageHeadingsAndBody() {
     // Clear existing headings and show loading state
     if (this.headingsContainer) {
       this.headingsContainer.innerHTML =
-        '<div class="loading-message">Koppen laden...</div>'
+        '<div class="loading-message">Koppen en body font laden...</div>'
     }
 
     // Query active tab and analyze headings directly
@@ -38,53 +40,86 @@ class OverviewTab {
       if (tabs && tabs[0] && tabs[0].id) {
         // Ensure content script is injected
         this.ensureContentScriptLoaded(tabs[0].id, () => {
-          // Request headings analysis from content script
-          chrome.tabs.sendMessage(
-            tabs[0].id,
-            { action: 'analyzeHeadings' },
-            (response) => {
-              if (chrome.runtime.lastError) {
-                console.error(
-                  'Error analyzing headings:',
-                  chrome.runtime.lastError
-                )
-                this.showNoHeadingsMessage(
-                  'Kon geen koppen laden. Probeer de pagina te vernieuwen.'
-                )
-                return
+          // Create a promise for the body font analysis
+          const bodyFontPromise = new Promise((resolve) => {
+            chrome.tabs.sendMessage(
+              tabs[0].id,
+              { action: 'analyzeBodyFont' },
+              (response) => {
+                if (chrome.runtime.lastError) {
+                  console.error(
+                    'Error analyzing body font:',
+                    chrome.runtime.lastError
+                  )
+                  resolve(null)
+                } else {
+                  resolve(response?.bodyFont || null)
+                }
+              }
+            )
+          })
+
+          // Create a promise for the headings analysis
+          const headingsPromise = new Promise((resolve) => {
+            chrome.tabs.sendMessage(
+              tabs[0].id,
+              { action: 'analyzeHeadings' },
+              (response) => {
+                if (chrome.runtime.lastError) {
+                  console.error(
+                    'Error analyzing headings:',
+                    chrome.runtime.lastError
+                  )
+                  resolve(null)
+                } else {
+                  resolve(response?.headings || null)
+                }
+              }
+            )
+          })
+
+          // Wait for both promises to resolve
+          Promise.all([bodyFontPromise, headingsPromise])
+            .then(([bodyFontData, headingsData]) => {
+              // Clear container before adding content
+              this.headingsContainer.innerHTML = ''
+
+              let contentAdded = false
+
+              // Add the body font data first (if available)
+              if (bodyFontData) {
+                console.log('Adding body font element with data:', bodyFontData)
+                this.addBodyFontElement(bodyFontData)
+                contentAdded = true
               }
 
-              if (
-                response &&
-                response.headings &&
-                response.headings.length > 0
-              ) {
-                // Clear container before adding new headings
-                this.headingsContainer.innerHTML = ''
-
+              // Add the headings
+              if (headingsData && headingsData.length > 0) {
                 // Process unique heading levels - take only first of each type
-                const uniqueHeadings = this.getUniqueHeadingLevels(
-                  response.headings
-                )
+                const uniqueHeadings = this.getUniqueHeadingLevels(headingsData)
 
                 if (uniqueHeadings.length > 0) {
                   // Add each unique heading level to the overview
                   uniqueHeadings.forEach((heading) => {
                     this.addHeadingElement(heading)
                   })
-                } else {
-                  this.showNoHeadingsMessage(
-                    'Geen koppen gevonden op deze pagina.'
-                  )
+                  contentAdded = true
                 }
-              } else {
-                // Show message if no headings found
+              }
+
+              // Show message if no content was added
+              if (!contentAdded) {
                 this.showNoHeadingsMessage(
-                  'Geen koppen gevonden op deze pagina.'
+                  'Geen koppen of body font gevonden op deze pagina.'
                 )
               }
-            }
-          )
+            })
+            .catch((error) => {
+              console.error('Error during analysis:', error)
+              this.showNoHeadingsMessage(
+                'Fout bij het analyseren van de pagina.'
+              )
+            })
         })
       } else {
         this.showNoHeadingsMessage('Kon geen actief tabblad vinden.')
@@ -149,6 +184,100 @@ class OverviewTab {
         ${message}
       </div>
     `
+    }
+  }
+
+  // Add body font element in the same style as headings
+  addBodyFontElement(bodyFontData) {
+    if (!this.headingsContainer) {
+      console.error('Headings container not found')
+      return
+    }
+
+    console.log('Creating body font card with data:', bodyFontData)
+
+    try {
+      // Create new ultra-compact body font card
+      const bodyCard = document.createElement('div')
+      bodyCard.className = 'heading-card ultra-compact'
+      bodyCard.dataset.level = 'body'
+
+      // Add some basic styling to make it stand out
+      bodyCard.style.borderLeft = '3px solid var(--primary-color)'
+      bodyCard.style.marginBottom = '15px'
+
+      // Create horizontal layout container
+      const cardLayout = document.createElement('div')
+      cardLayout.className = 'card-layout'
+
+      // Left column - heading type
+      const headingType = document.createElement('div')
+      headingType.className = 'heading-type'
+
+      const headingLevel = document.createElement('div')
+      headingLevel.className = 'heading-level'
+      headingLevel.textContent = 'BODY'
+      headingType.appendChild(headingLevel)
+
+      // Right column - heading details
+      const headingDetails = document.createElement('div')
+      headingDetails.className = 'heading-details'
+
+      // Font family row without copy button
+      const fontFamilyRow = document.createElement('div')
+      fontFamilyRow.className = 'font-family-row'
+
+      const fontFamily = document.createElement('div')
+      fontFamily.className = 'font-family'
+      fontFamily.textContent = bodyFontData.family || 'Unknown font'
+      fontFamilyRow.appendChild(fontFamily)
+
+      headingDetails.appendChild(fontFamilyRow)
+
+      // Properties grid
+      const propertiesGrid = document.createElement('div')
+      propertiesGrid.className = 'properties-grid'
+
+      // Style property
+      const styleProperty = this.createUltraCompactProperty(
+        'Stijl',
+        bodyFontData.style || 'normal'
+      )
+      propertiesGrid.appendChild(styleProperty)
+
+      // Weight property
+      const weightProperty = this.createUltraCompactProperty(
+        'Gewicht',
+        bodyFontData.weight || '400'
+      )
+      propertiesGrid.appendChild(weightProperty)
+
+      // Size property
+      const sizeProperty = this.createUltraCompactProperty(
+        'Grootte',
+        bodyFontData.size || '16px'
+      )
+      propertiesGrid.appendChild(sizeProperty)
+
+      // Line height property
+      const lineHeightProperty = this.createUltraCompactProperty(
+        'Lijnhoogte',
+        bodyFontData.lineHeight || 'normal'
+      )
+      propertiesGrid.appendChild(lineHeightProperty)
+
+      headingDetails.appendChild(propertiesGrid)
+
+      // Assemble the card
+      cardLayout.appendChild(headingType)
+      cardLayout.appendChild(headingDetails)
+      bodyCard.appendChild(cardLayout)
+
+      // Add the card to the container at the beginning
+      this.headingsContainer.appendChild(bodyCard)
+      console.log('Body font card added to container')
+    } catch (error) {
+      console.error('Error creating body font card:', error)
     }
   }
 
