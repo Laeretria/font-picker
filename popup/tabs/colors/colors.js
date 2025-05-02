@@ -209,7 +209,7 @@ class ColorsTab {
         // Position it absolutely within the color wheel container
         indicatorContainer.style.position = 'absolute'
         indicatorContainer.style.top = '0px'
-        indicatorContainer.style.left = '64%'
+        indicatorContainer.style.left = '72%'
         indicatorContainer.style.transform = 'translateX(-50%)'
         indicatorContainer.style.display = 'flex'
         indicatorContainer.style.alignItems = 'center'
@@ -229,6 +229,10 @@ class ColorsTab {
         colorText.style.fontFamily = 'Regola-Regular, sans-serif'
         colorText.style.fontSize = '14px'
         colorText.style.paddingBottom = '20px'
+        colorText.style.color = 'var(--heading)'
+        colorText.style.width = '100px' // Fixed width for the text
+        colorText.style.textAlign = 'left' // Align text to the left
+        colorText.style.overflow = 'visible' // Allow overflow
 
         // Add elements to the container
         indicatorContainer.appendChild(indicatorImg)

@@ -307,6 +307,10 @@
   font-family: 'Regola-Regular', sans-serif;
   font-size: 14px;
   color: #333;
+  width: 100px; /* Add fixed width */
+  text-align: left; /* Left align text */
+  white-space: nowrap; /* Prevent text wrapping */
+  overflow: visible; /* Allow text to overflow its container */
 }
 
 /* Make sure color wheel container has position relative */
