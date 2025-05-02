@@ -95,13 +95,100 @@ class ColorsTab {
     // Update color lists
     this.updateColorList(this.backgroundColorsElement, colorData.background)
     this.updateColorList(this.textColorsElement, colorData.text)
-    this.updateColorList(this.borderColorsElement, colorData.border)
+
+    // Filter out colors that already appear in background or text colors to create "overige kleuren"
+    const backgroundAndTextColors = [...colorData.background, ...colorData.text]
+    const uniqueOtherColors = colorData.border.filter(
+      (color) => !backgroundAndTextColors.includes(color)
+    )
+
+    this.updateColorList(this.borderColorsElement, uniqueOtherColors)
   }
 
   getUniqueColors(colors) {
+    // Filter out transparent and white colors
     return [...new Set(colors)].filter(
-      (color) => color && color !== 'transparent'
+      (color) =>
+        color && color !== 'transparent' && !this.isTransparentOrWhite(color)
     )
+  }
+
+  isTransparentOrWhite(color) {
+    // First check for full transparency in hex format
+    if (color.startsWith('#') && color.length === 9) {
+      // Check if the last two characters (alpha) are "00"
+      if (color.substring(7, 9).toLowerCase() === '00') {
+        return true // Fully transparent
+      }
+    }
+
+    // Handle RGBA format for transparency
+    if (color.startsWith('rgba')) {
+      const rgbaMatch = color.match(
+        /rgba\((\d+),\s*(\d+),\s*(\d+),\s*([0-9.]+)\)/
+      )
+      if (rgbaMatch) {
+        const alpha = parseFloat(rgbaMatch[4])
+        // Check if fully or nearly transparent
+        if (alpha <= 0.05) {
+          return true
+        }
+      }
+    }
+
+    // Handle HSLA format for transparency
+    if (color.startsWith('hsla')) {
+      const hslaMatch = color.match(
+        /hsla\((\d+),\s*(\d+)%,\s*(\d+)%,\s*([0-9.]+)\)/
+      )
+      if (hslaMatch) {
+        const alpha = parseFloat(hslaMatch[4])
+        // Check if fully or nearly transparent
+        if (alpha <= 0.05) {
+          return true
+        }
+      }
+    }
+
+    // Then check for white color
+    // Handle hex format
+    if (color.startsWith('#')) {
+      const hex = color.toLowerCase()
+      return (
+        hex === '#fff' ||
+        hex === '#ffffff' ||
+        hex === '#ffff' ||
+        hex === '#ffffffff'
+      )
+    }
+
+    // Handle RGB format
+    if (color.startsWith('rgb')) {
+      const rgbMatch = color.match(
+        /rgba?\((\d+),\s*(\d+),\s*(\d+)(?:,\s*([0-9.]+))?\)/
+      )
+      if (rgbMatch) {
+        const r = parseInt(rgbMatch[1])
+        const g = parseInt(rgbMatch[2])
+        const b = parseInt(rgbMatch[3])
+        // Check if all rgb values are high (white or nearly white)
+        return r >= 250 && g >= 250 && b >= 250
+      }
+    }
+
+    // Handle HSL format
+    if (color.startsWith('hsl')) {
+      const hslMatch = color.match(
+        /hsla?\((\d+),\s*(\d+)%,\s*(\d+)%(?:,\s*([0-9.]+))?\)/
+      )
+      if (hslMatch) {
+        const l = parseInt(hslMatch[3]) // lightness value
+        // Check if lightness is very high (white or nearly white)
+        return l >= 98
+      }
+    }
+
+    return false
   }
 
   generateColorWheel(colors) {
@@ -624,16 +711,26 @@ class ColorsTab {
 
   updateSelectedElementColorData(colorData) {
     // Update the color lists with the selected element's colors
-    if (colorData.text) {
+    if (colorData.text && !this.isTransparentOrWhite(colorData.text)) {
       this.updateColorList(this.textColorsElement, [colorData.text])
     }
 
-    if (colorData.background) {
+    if (
+      colorData.background &&
+      !this.isTransparentOrWhite(colorData.background)
+    ) {
       this.updateColorList(this.backgroundColorsElement, [colorData.background])
     }
 
-    if (colorData.border) {
-      this.updateColorList(this.borderColorsElement, [colorData.border])
+    // Only add to "overige kleuren" if the color isn't already in the other categories
+    if (colorData.border && !this.isTransparentOrWhite(colorData.border)) {
+      const isUnique =
+        (!colorData.text || colorData.border !== colorData.text) &&
+        (!colorData.background || colorData.border !== colorData.background)
+
+      if (isUnique) {
+        this.updateColorList(this.borderColorsElement, [colorData.border])
+      }
     }
   }
 }
