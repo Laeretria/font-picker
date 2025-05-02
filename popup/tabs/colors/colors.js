@@ -295,8 +295,8 @@ class ColorsTab {
 
         // Position it absolutely within the color wheel container
         indicatorContainer.style.position = 'absolute'
-        indicatorContainer.style.top = '0px'
-        indicatorContainer.style.left = '72%'
+        indicatorContainer.style.top = '10px'
+        indicatorContainer.style.left = '76%'
         indicatorContainer.style.transform = 'translateX(-50%)'
         indicatorContainer.style.display = 'flex'
         indicatorContainer.style.alignItems = 'center'
