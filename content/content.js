@@ -393,9 +393,6 @@ function selectElement(e) {
     background: computedStyle.backgroundColor,
     border: computedStyle.borderColor,
     element: element.tagName.toLowerCase(),
-    text:
-      element.textContent.slice(0, 20) +
-      (element.textContent.length > 20 ? '...' : ''),
     _isFromElementSelection: true, // Add flag indicating this is from element selection
     _sourceUrl: window.location.href, // Add current URL to the data
     timestamp: Date.now(), // Add timestamp for freshness checking

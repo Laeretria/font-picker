@@ -10,6 +10,7 @@ class FontTab {
     this.fontPreviewElement = document.getElementById('font-preview')
     this.cssSnippetElement = document.getElementById('css-snippet')
     this.copySnippetButton = document.getElementById('copy-snippet-btn')
+    this.textColorSwatch = document.getElementById('text-color-swatch')
 
     // Track current font data - initialize with empty values
     this.currentFontData = {
@@ -21,6 +22,10 @@ class FontTab {
         lineHeight: '',
         element: '',
       },
+    }
+
+    this.currentColorData = {
+      text: '',
     }
 
     // Track current snippet format
@@ -95,6 +100,40 @@ class FontTab {
         element: '',
       },
     }
+
+    // Add check mark animation styles
+    const style = document.createElement('style')
+    style.textContent = `
+    .check-mark-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background-color: rgba(0, 0, 0, 0.3);
+      border-radius: 4px;
+      animation: fadeIn 0.2s ease-in-out;
+    }
+    
+    .check-icon {
+      stroke: white;
+      animation: scaleIn 0.3s ease-out;
+    }
+    
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+    
+    @keyframes scaleIn {
+      from { transform: scale(0); }
+      to { transform: scale(1); }
+    }
+  `
+    document.head.appendChild(style)
   }
 
   // Clear all font values method
@@ -125,6 +164,19 @@ class FontTab {
     // Clear CSS snippet
     if (this.cssSnippetElement) this.cssSnippetElement.textContent = ''
     console.log('Cleared CSS snippet')
+
+    // Clear color swatch
+    if (this.textColorSwatch) {
+      this.textColorSwatch.style.backgroundColor = ''
+      this.textColorSwatch.title = 'Tekstkleur'
+      this.textColorSwatch.dataset.color = ''
+    }
+    console.log('Cleared color swatch')
+
+    // Reset current color data
+    this.currentColorData = {
+      text: '',
+    }
   }
 
   setupEventListeners() {
@@ -160,6 +212,175 @@ class FontTab {
           }
         })
       })
+
+    // Add this new code for the color swatch click event
+    if (this.textColorSwatch) {
+      this.textColorSwatch.addEventListener('click', () => {
+        const colorValue = this.textColorSwatch.dataset.color
+        if (colorValue) {
+          this.copyColorToClipboard(colorValue)
+        }
+      })
+    }
+  }
+
+  // Add this method to the FontTab class
+  rgbToHex(rgb) {
+    // Handle empty or invalid rgb values
+    if (!rgb || typeof rgb !== 'string') return rgb
+
+    // Check if it's already a hex color
+    if (rgb.startsWith('#')) return rgb
+
+    // Extract RGB values
+    const rgbMatch = rgb.match(
+      /^rgba?\((\d+),\s*(\d+),\s*(\d+)(?:,\s*[\d.]+)?\)$/
+    )
+    if (!rgbMatch) return rgb // Return original if not matching RGB format
+
+    const r = parseInt(rgbMatch[1])
+    const g = parseInt(rgbMatch[2])
+    const b = parseInt(rgbMatch[3])
+
+    // Convert to hex
+    return (
+      '#' +
+      ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1).toUpperCase()
+    )
+  }
+
+  // Update the copyColorToClipboard method
+  copyColorToClipboard(colorText) {
+    if (!colorText) return
+
+    navigator.clipboard
+      .writeText(colorText)
+      .then(() => {
+        // Show toast notification
+        this.showColorToastNotification(colorText)
+
+        // Show check mark animation on the color swatch
+        this.showCheckMarkAnimation(this.textColorSwatch)
+      })
+      .catch((err) => {
+        console.error('Could not copy color: ', err)
+      })
+  }
+
+  // Add this method to the FontTab class
+  showCheckMarkAnimation(element) {
+    // Find the color box inside the element
+    const colorBox = element || this.textColorSwatch
+    if (!colorBox) return
+
+    // Create check mark overlay
+    const checkMarkOverlay = document.createElement('div')
+    checkMarkOverlay.className = 'check-mark-overlay'
+
+    // Create SVG check mark icon
+    const checkSvg = document.createElementNS(
+      'http://www.w3.org/2000/svg',
+      'svg'
+    )
+    checkSvg.setAttribute('viewBox', '0 0 24 24')
+    checkSvg.setAttribute('width', '12')
+    checkSvg.setAttribute('height', '12')
+    checkSvg.setAttribute('stroke', 'currentColor')
+    checkSvg.setAttribute('stroke-width', '3')
+    checkSvg.setAttribute('stroke-linecap', 'round')
+    checkSvg.setAttribute('stroke-linejoin', 'round')
+    checkSvg.setAttribute('fill', 'none')
+    checkSvg.classList.add('check-icon')
+
+    // Create check mark path
+    const path = document.createElementNS('http://www.w3.org/2000/svg', 'path')
+    path.setAttribute('d', 'M20 6L9 17l-5-5')
+    checkSvg.appendChild(path)
+
+    // Add check mark to overlay
+    checkMarkOverlay.appendChild(checkSvg)
+
+    // Add the overlay to the color box
+    colorBox.style.position = 'relative'
+    colorBox.appendChild(checkMarkOverlay)
+
+    // Remove after animation completes
+    setTimeout(() => {
+      try {
+        if (colorBox.contains(checkMarkOverlay)) {
+          colorBox.removeChild(checkMarkOverlay)
+        }
+      } catch (e) {
+        console.error('Error removing check mark overlay:', e)
+      }
+    }, 1500)
+  }
+
+  // Add this method to show a toast notification
+  showColorToastNotification(colorText) {
+    try {
+      // Get the main content element
+      const mainContent = document.querySelector('.main-content')
+
+      if (!mainContent) {
+        console.error('Could not find main-content div')
+        return
+      }
+
+      // Create a toast container if it doesn't exist
+      let toastContainer = document.getElementById('font-toast-container')
+
+      if (!toastContainer) {
+        toastContainer = document.createElement('div')
+        toastContainer.id = 'font-toast-container'
+        document.body.appendChild(toastContainer)
+      }
+
+      // Create toast element
+      const toast = document.createElement('div')
+      toast.className = 'font-toast'
+
+      // Create color preview
+      const colorPreview = document.createElement('div')
+      colorPreview.className = 'toast-color-preview'
+      colorPreview.style.backgroundColor = colorText
+
+      // Create message text
+      const message = document.createElement('span')
+      message.textContent = `${colorText} gekopieerd`
+      message.className = 'toast-message'
+
+      // Add elements to toast
+      toast.appendChild(colorPreview)
+      toast.appendChild(message)
+
+      // Add to container
+      toastContainer.appendChild(toast)
+
+      // Trigger animation
+      setTimeout(() => {
+        toast.classList.add('toast-visible')
+      }, 10)
+
+      // Auto-dismiss after 2 seconds
+      setTimeout(() => {
+        toast.classList.add('toast-hiding')
+        toast.classList.remove('toast-visible')
+
+        setTimeout(() => {
+          if (toastContainer && toast && toastContainer.contains(toast)) {
+            toastContainer.removeChild(toast)
+
+            // Remove container if empty
+            if (toastContainer.children.length === 0) {
+              document.body.removeChild(toastContainer)
+            }
+          }
+        }, 300)
+      }, 2000)
+    } catch (error) {
+      console.error('Error showing toast notification:', error)
+    }
   }
 
   copyToClipboard(text, event) {
@@ -250,6 +471,49 @@ class FontTab {
     this.updateCSSSnippet()
   }
 
+  // Update the updateColorUI method
+  updateColorUI(colorData) {
+    // If no color data or no text color, clear the color swatch
+    if (!colorData || !colorData.text) {
+      if (this.textColorSwatch) {
+        this.textColorSwatch.style.backgroundColor = ''
+        this.textColorSwatch.title = 'Tekstkleur'
+        this.textColorSwatch.dataset.color = ''
+        this.textColorSwatch.style.display = 'none' // Hide the swatch when no data
+      }
+      return
+    }
+
+    // Convert RGB to hex
+    const hexColor = this.rgbToHex(colorData.text)
+
+    // Update text color swatch
+    if (this.textColorSwatch) {
+      this.textColorSwatch.style.display = 'block' // Show the swatch
+      this.textColorSwatch.style.backgroundColor = colorData.text // Keep original for display
+      this.textColorSwatch.title = `${hexColor}`
+      this.textColorSwatch.dataset.color = hexColor // Store hex code for copying
+    }
+
+    // Store the color data with hex code
+    this.currentColorData = {
+      text: hexColor,
+    }
+  }
+
+  // Add this method after clearAllFontValues
+  clearColorValues() {
+    console.log('Clearing color values')
+
+    // In the clearAllFontValues method, update the color swatch part to:
+    if (this.textColorSwatch) {
+      this.textColorSwatch.style.backgroundColor = ''
+      this.textColorSwatch.title = 'Tekstkleur'
+      this.textColorSwatch.dataset.color = ''
+      this.textColorSwatch.style.display = 'none' // Hide by default
+    }
+  }
+
   // Helper method for formatting line-height
   formatLineHeight(lineHeight) {
     if (!lineHeight) return ''
@@ -296,8 +560,8 @@ class FontTab {
     this.fontPreviewElement.style.lineHeight = fontData.lineHeight || ''
   }
 
-  // Update selected element font data method
-  updateSelectedElementFontData(fontData) {
+  // Update the updateSelectedElementFontData method to also handle color data
+  updateSelectedElementFontData(fontData, colorData) {
     // If no font data passed, clear everything and return
     if (!fontData || !fontData.family) {
       this.clearAllFontValues()
@@ -361,6 +625,14 @@ class FontTab {
 
     // Update CSS snippet
     this.updateCSSSnippet()
+
+    // Update color data if provided
+    if (colorData && colorData.text) {
+      this.updateColorUI(colorData)
+    } else {
+      // Clear color data if not provided
+      this.updateColorUI(null)
+    }
   }
 
   // Update CSS snippet method

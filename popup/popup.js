@@ -281,6 +281,15 @@ document.addEventListener('DOMContentLoaded', function () {
     if (document.getElementById('css-snippet')) {
       document.getElementById('css-snippet').textContent = ''
     }
+
+    // In the clearAllFontUI function, update the color swatch part to:
+    if (document.getElementById('text-color-swatch')) {
+      const swatch = document.getElementById('text-color-swatch')
+      swatch.style.backgroundColor = ''
+      swatch.title = 'Tekstkleur'
+      swatch.dataset.color = ''
+      swatch.style.display = 'none' // Hide when clearing
+    }
   }
 
   // Element picker functionality
@@ -421,7 +430,10 @@ document.addEventListener('DOMContentLoaded', function () {
 
       if (request.fontData && fontTab) {
         try {
-          fontTab.updateSelectedElementFontData(request.fontData)
+          fontTab.updateSelectedElementFontData(
+            request.fontData,
+            request.colorData
+          )
         } catch (error) {
           console.error('Error updating font data:', error)
         }
@@ -469,7 +481,10 @@ document.addEventListener('DOMContentLoaded', function () {
         // Update UI if fontTab is initialized
         if (fontTab) {
           try {
-            fontTab.updateSelectedElementFontData(request.fontData)
+            fontTab.updateSelectedElementFontData(
+              request.fontData,
+              request.colorData
+            )
           } catch (error) {
             console.error('Error updating font data:', error)
           }
