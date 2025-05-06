@@ -31,6 +31,12 @@ class FontTab {
     // Track current snippet format
     this.currentSnippetFormat = 'element'
 
+    // Add a current format property
+    this.currentColorFormat = 'HEX' // Initial format
+
+    // Add a format indicator element reference
+    this.formatIndicator = null
+
     // Initialize
     this.initialize()
   }
@@ -179,8 +185,9 @@ class FontTab {
     }
   }
 
+  // Update setupEventListeners method for the color swatch
   setupEventListeners() {
-    // Add event listener for copy snippet button - KEEP THIS ONE
+    // Add event listener for copy snippet button
     if (this.copySnippetButton) {
       this.copySnippetButton.addEventListener('click', (e) => {
         const textToCopy = this.cssSnippetElement.textContent
@@ -213,18 +220,30 @@ class FontTab {
         })
       })
 
-    // Add this new code for the color swatch click event
+    // Update this for the color swatch click event
     if (this.textColorSwatch) {
-      this.textColorSwatch.addEventListener('click', () => {
+      this.textColorSwatch.addEventListener('click', (e) => {
+        // If Shift key is pressed, cycle through formats
+        if (e.shiftKey) {
+          this.cycleColorFormat()
+          return
+        }
+
+        // Otherwise, copy the current format
         const colorValue = this.textColorSwatch.dataset.color
         if (colorValue) {
           this.copyColorToClipboard(colorValue)
         }
       })
+
+      // Add double click to cycle formats
+      this.textColorSwatch.addEventListener('dblclick', () => {
+        this.cycleColorFormat()
+      })
     }
   }
 
-  // Add this method to the FontTab class
+  // Add color format conversion methods
   rgbToHex(rgb) {
     // Handle empty or invalid rgb values
     if (!rgb || typeof rgb !== 'string') return rgb
@@ -249,7 +268,56 @@ class FontTab {
     )
   }
 
-  // Update the copyColorToClipboard method
+  // Function to convert RGB to HSL
+  rgbToHsl(rgb) {
+    // Handle empty or invalid rgb values
+    if (!rgb || typeof rgb !== 'string') return rgb
+
+    // Extract RGB values
+    const rgbMatch = rgb.match(
+      /^rgba?\((\d+),\s*(\d+),\s*(\d+)(?:,\s*[\d.]+)?\)$/
+    )
+    if (!rgbMatch) return rgb // Return original if not matching RGB format
+
+    let r = parseInt(rgbMatch[1]) / 255
+    let g = parseInt(rgbMatch[2]) / 255
+    let b = parseInt(rgbMatch[3]) / 255
+
+    const max = Math.max(r, g, b)
+    const min = Math.min(r, g, b)
+    let h,
+      s,
+      l = (max + min) / 2
+
+    if (max === min) {
+      // Achromatic
+      h = s = 0
+    } else {
+      const d = max - min
+      s = l > 0.5 ? d / (2 - max - min) : d / (max + min)
+
+      switch (max) {
+        case r:
+          h = (g - b) / d + (g < b ? 6 : 0)
+          break
+        case g:
+          h = (b - r) / d + 2
+          break
+        case b:
+          h = (r - g) / d + 4
+          break
+      }
+
+      h = Math.round(h * 60)
+    }
+
+    s = Math.round(s * 100)
+    l = Math.round(l * 100)
+
+    return `hsl(${h}, ${s}%, ${l}%)`
+  }
+
+  // Modify the copyColorToClipboard method
   copyColorToClipboard(colorText) {
     if (!colorText) return
 
@@ -316,7 +384,7 @@ class FontTab {
     }, 1500)
   }
 
-  // Add this method to show a toast notification
+  // Update the showColorToastNotification method
   showColorToastNotification(colorText) {
     try {
       // Get the main content element
@@ -345,10 +413,20 @@ class FontTab {
       colorPreview.className = 'toast-color-preview'
       colorPreview.style.backgroundColor = colorText
 
-      // Create message text
+      // Create message text with format info
       const message = document.createElement('span')
-      message.textContent = `${colorText} gekopieerd`
       message.className = 'toast-message'
+
+      // Add the format type to the message
+      if (colorText.startsWith('#')) {
+        message.textContent = `${colorText} gekopieerd`
+      } else if (colorText.startsWith('rgb')) {
+        message.textContent = `${colorText} gekopieerd`
+      } else if (colorText.startsWith('hsl')) {
+        message.textContent = `${colorText} gekopieerd`
+      } else {
+        message.textContent = `${colorText} gekopieerd`
+      }
 
       // Add elements to toast
       toast.appendChild(colorPreview)
@@ -471,7 +549,7 @@ class FontTab {
     this.updateCSSSnippet()
   }
 
-  // Update the updateColorUI method
+  // Modify the updateColorUI method
   updateColorUI(colorData) {
     // If no color data or no text color, clear the color swatch
     if (!colorData || !colorData.text) {
@@ -480,24 +558,156 @@ class FontTab {
         this.textColorSwatch.title = 'Tekstkleur'
         this.textColorSwatch.dataset.color = ''
         this.textColorSwatch.style.display = 'none' // Hide the swatch when no data
+
+        // Hide format indicator if it exists
+        this.hideFormatIndicator()
       }
       return
     }
 
-    // Convert RGB to hex
+    // Convert to different formats
     const hexColor = this.rgbToHex(colorData.text)
+    const rgbColor = colorData.text
+    const hslColor = this.rgbToHsl(colorData.text)
 
     // Update text color swatch
     if (this.textColorSwatch) {
       this.textColorSwatch.style.display = 'block' // Show the swatch
       this.textColorSwatch.style.backgroundColor = colorData.text // Keep original for display
-      this.textColorSwatch.title = `${hexColor}`
-      this.textColorSwatch.dataset.color = hexColor // Store hex code for copying
+
+      // Store all formats
+      this.textColorSwatch.dataset.hexColor = hexColor
+      this.textColorSwatch.dataset.rgbColor = rgbColor
+      this.textColorSwatch.dataset.hslColor = hslColor
+
+      // Set title based on current format
+      this.setColorSwatchFormat()
     }
 
-    // Store the color data with hex code
+    // Store the color data with all formats
     this.currentColorData = {
-      text: hexColor,
+      hex: hexColor,
+      rgb: rgbColor,
+      hsl: hslColor,
+    }
+
+    // Create or update format indicator
+    this.updateFormatIndicator()
+  }
+
+  // Update the setColorSwatchFormat method:
+  setColorSwatchFormat() {
+    if (!this.textColorSwatch) return
+
+    // Get color values, with fallbacks to prevent undefined
+    const hexColor =
+      this.textColorSwatch.dataset.hexColor || this.currentColorData.hex || ''
+    const rgbColor =
+      this.textColorSwatch.dataset.rgbColor || this.currentColorData.rgb || ''
+    const hslColor =
+      this.textColorSwatch.dataset.hslColor || this.currentColorData.hsl || ''
+
+    switch (this.currentColorFormat) {
+      case 'HEX':
+        this.textColorSwatch.dataset.color = hexColor
+        this.textColorSwatch.title = hexColor
+          ? `${hexColor} (klik om te kopiëren)`
+          : 'Tekstkleur'
+        break
+      case 'RGB':
+        this.textColorSwatch.dataset.color = rgbColor
+        this.textColorSwatch.title = rgbColor
+          ? `${rgbColor} (klik om te kopiëren)`
+          : 'Tekstkleur'
+        break
+      case 'HSL':
+        this.textColorSwatch.dataset.color = hslColor
+        this.textColorSwatch.title = hslColor
+          ? `${hslColor} (klik om te kopiëren)`
+          : 'Tekstkleur'
+        break
+    }
+  }
+
+  // Add method to cycle through formats
+  cycleColorFormat() {
+    // Cycle through formats: HEX -> RGB -> HSL -> HEX
+    switch (this.currentColorFormat) {
+      case 'HEX':
+        this.currentColorFormat = 'RGB'
+        break
+      case 'RGB':
+        this.currentColorFormat = 'HSL'
+        break
+      case 'HSL':
+        this.currentColorFormat = 'HEX'
+        break
+      default:
+        this.currentColorFormat = 'HEX'
+    }
+
+    // Update color swatch
+    this.setColorSwatchFormat()
+
+    // Update format indicator
+    this.updateFormatIndicator()
+  }
+
+  // Create or update format indicator
+  updateFormatIndicator() {
+    if (!this.textColorSwatch || !this.currentColorData) return
+
+    // Find parent container (usually font-card-header)
+    const parentContainer = this.textColorSwatch.parentElement
+    if (!parentContainer) return
+
+    // Create indicator if it doesn't exist
+    if (!this.formatIndicator) {
+      this.formatIndicator = document.createElement('span')
+      this.formatIndicator.className = 'format-indicator'
+      this.formatIndicator.style.fontSize = '12px'
+      this.formatIndicator.style.marginRight = '4px'
+      this.formatIndicator.style.color = 'var(--body)'
+      this.formatIndicator.style.cursor = 'pointer'
+      this.formatIndicator.style.padding = '3px'
+      this.formatIndicator.style.borderRadius = '4px'
+      this.formatIndicator.style.backgroundColor = 'var(--header-bg)'
+      this.formatIndicator.title = 'Klik om formaat te wisselen'
+
+      // Add event listener to cycle format when clicked
+      this.formatIndicator.addEventListener('click', () => {
+        this.cycleColorFormat()
+      })
+
+      // Insert before the color swatch
+      parentContainer.insertBefore(this.formatIndicator, this.textColorSwatch)
+    }
+
+    // In the updateFormatIndicator method, add these lines:
+    this.formatIndicator.style.transition =
+      'transform 0.2s ease, background-color 0.2s ease'
+
+    this.formatIndicator.addEventListener('mouseenter', () => {
+      this.formatIndicator.style.backgroundColor = 'var(--header-bg)'
+      this.formatIndicator.style.transform = 'scale(1.2)'
+    })
+
+    this.formatIndicator.addEventListener('mouseleave', () => {
+      this.formatIndicator.style.backgroundColor = 'var(--header-bg)'
+      this.formatIndicator.style.transform = 'scale(1)'
+    })
+
+    // Update indicator text
+    this.formatIndicator.textContent = this.currentColorFormat
+
+    // Show the indicator
+    this.formatIndicator.style.display = 'inline-block'
+  }
+
+  // Hide format indicator
+  hideFormatIndicator() {
+    if (this.formatIndicator) {
+      this.formatIndicator.style.display = 'none'
     }
   }
 
