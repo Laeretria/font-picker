@@ -94,7 +94,20 @@ document.addEventListener('DOMContentLoaded', function () {
     localStorage.removeItem('selectedElementFontData')
     localStorage.removeItem('selectedElementColorData')
     localStorage.removeItem('latestColorData')
-    localStorage.removeItem('lastVisitedUrl')
+
+    // Clear the scan flag for the current URL only, not all URLs
+    const currentUrl = localStorage.getItem('lastVisitedUrl')
+    if (currentUrl) {
+      const scannedUrls = JSON.parse(
+        localStorage.getItem('scannedUrls') || '{}'
+      )
+      if (scannedUrls[currentUrl]) {
+        delete scannedUrls[currentUrl]
+        localStorage.setItem('scannedUrls', JSON.stringify(scannedUrls))
+      }
+    }
+
+    // Keep lastVisitedUrl for reference (don't remove it)
 
     // 2. Clear chrome.storage
     if (chrome.storage && chrome.storage.local) {
@@ -102,7 +115,6 @@ document.addEventListener('DOMContentLoaded', function () {
         'selectedElementFontData',
         'selectedElementColorData',
         'latestColorData',
-        'lastVisitedUrl',
         'lastSelectionTimestamp',
       ])
     }
@@ -217,21 +229,28 @@ document.addEventListener('DOMContentLoaded', function () {
         } else if (tabId === 'colors' && !colorsTab) {
           console.log('Initializing ColorsTab')
           if (typeof ColorsTab !== 'undefined') {
-            // Create a flag in localStorage to track if we've already done a full scan
-            const hasScanned = localStorage.getItem('fullColorScanComplete')
+            // Check if we've already completed a full scan for this URL
+            const currentUrl = localStorage.getItem('lastVisitedUrl')
+            const scannedUrls = JSON.parse(
+              localStorage.getItem('scannedUrls') || '{}'
+            )
+            const hasScannedThisUrl =
+              currentUrl && scannedUrls[currentUrl] === true
 
             colorsTab = new ColorsTab()
 
-            // Only auto-start the scrolling if we haven't already completed a scan this session
-            if (hasScanned === 'true') {
+            // Only auto-start the scrolling if we haven't already scanned this URL
+            if (hasScannedThisUrl) {
               console.log(
-                'Full color scan already completed this session, skipping auto-scroll'
+                'Full color scan already completed for this URL, skipping auto-scroll'
               )
               // Just make sure we have the latest colors
               colorsTab.analyzeColors()
-            } else {
-              // Mark that we've done a full scan
-              localStorage.setItem('fullColorScanComplete', 'true')
+            } else if (currentUrl) {
+              // Mark that we've scanned this URL
+              scannedUrls[currentUrl] = true
+              localStorage.setItem('scannedUrls', JSON.stringify(scannedUrls))
+              // Proceed with full scan
             }
 
             // Check if we have stored colors from animations/delayed loading
@@ -362,8 +381,22 @@ document.addEventListener('DOMContentLoaded', function () {
           } else if (activeTabId === 'colors') {
             console.log('Initializing ColorsTab on popup open')
             if (typeof ColorsTab !== 'undefined') {
+              // Check if we've already completed a full scan for this URL
+              const currentUrl = localStorage.getItem('lastVisitedUrl')
+              const scannedUrls = JSON.parse(
+                localStorage.getItem('scannedUrls') || '{}'
+              )
+              const hasScannedThisUrl =
+                currentUrl && scannedUrls[currentUrl] === true
+
               // Always create a new instance to get fresh data
               colorsTab = new ColorsTab()
+
+              // If needed, set this flag to indicate we've already scanned this URL
+              if (hasScannedThisUrl) {
+                colorsTab.hasScannedUrl = true
+              }
+
               // Check if we have stored updated colors from animations/delayed loading
               const latestColorData = localStorage.getItem('latestColorData')
               if (latestColorData) {

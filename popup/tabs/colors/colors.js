@@ -14,6 +14,9 @@ class ColorsTab {
     // All colors data
     this.colorsData = null
 
+    // Flag to track if this URL has already been scanned
+    this.hasScannedUrl = false
+
     // Initialize
     this.initialize()
   }
@@ -22,10 +25,20 @@ class ColorsTab {
     // Set up event listeners
     this.setupEventListeners()
 
-    // Start automatic color analysis with scrolling
-    this.startAutoScrollAnalysis()
+    // Check if we should auto-scroll for this URL
+    const currentUrl = localStorage.getItem('lastVisitedUrl')
+    const scannedUrls = JSON.parse(localStorage.getItem('scannedUrls') || '{}')
+    this.hasScannedUrl = currentUrl && scannedUrls[currentUrl] === true
 
-    // Initial analysis
+    // Start automatic color analysis with scrolling only if we haven't scanned this URL
+    if (!this.hasScannedUrl && currentUrl) {
+      this.startAutoScrollAnalysis()
+      // Mark that we've scanned this URL
+      scannedUrls[currentUrl] = true
+      localStorage.setItem('scannedUrls', JSON.stringify(scannedUrls))
+    }
+
+    // Initial analysis (always do this to get current colors)
     this.analyzeColors()
   }
 
