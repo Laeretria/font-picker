@@ -1,7 +1,7 @@
 // Colors tab specific functionality
 
 class ColorsTab {
-  constructor() {
+  constructor(hasScannedUrl = false) {
     // Color elements
     this.colorWheelElement = document.getElementById('color-wheel')
     this.backgroundColorsElement = document.getElementById('background-colors')
@@ -15,7 +15,7 @@ class ColorsTab {
     this.colorsData = null
 
     // Flag to track if this URL has already been scanned
-    this.hasScannedUrl = false
+    this.hasScannedUrl = hasScannedUrl
 
     // Initialize
     this.initialize()
@@ -25,17 +25,11 @@ class ColorsTab {
     // Set up event listeners
     this.setupEventListeners()
 
-    // Check if we should auto-scroll for this URL
-    const currentUrl = localStorage.getItem('lastVisitedUrl')
-    const scannedUrls = JSON.parse(localStorage.getItem('scannedUrls') || '{}')
-    this.hasScannedUrl = currentUrl && scannedUrls[currentUrl] === true
-
     // Start automatic color analysis with scrolling only if we haven't scanned this URL
-    if (!this.hasScannedUrl && currentUrl) {
+    if (!this.hasScannedUrl) {
       this.startAutoScrollAnalysis()
-      // Mark that we've scanned this URL
-      scannedUrls[currentUrl] = true
-      localStorage.setItem('scannedUrls', JSON.stringify(scannedUrls))
+    } else {
+      console.log('URL already scanned, skipping auto-scroll analysis')
     }
 
     // Initial analysis (always do this to get current colors)

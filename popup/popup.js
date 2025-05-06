@@ -95,18 +95,6 @@ document.addEventListener('DOMContentLoaded', function () {
     localStorage.removeItem('selectedElementColorData')
     localStorage.removeItem('latestColorData')
 
-    // Clear the scan flag for the current URL only, not all URLs
-    const currentUrl = localStorage.getItem('lastVisitedUrl')
-    if (currentUrl) {
-      const scannedUrls = JSON.parse(
-        localStorage.getItem('scannedUrls') || '{}'
-      )
-      if (scannedUrls[currentUrl]) {
-        delete scannedUrls[currentUrl]
-        localStorage.setItem('scannedUrls', JSON.stringify(scannedUrls))
-      }
-    }
-
     // Keep lastVisitedUrl for reference (don't remove it)
 
     // 2. Clear chrome.storage
@@ -226,7 +214,8 @@ document.addEventListener('DOMContentLoaded', function () {
           } else {
             console.error('FontTab class is not defined!')
           }
-        } else if (tabId === 'colors' && !colorsTab) {
+        }
+        if (tabId === 'colors' && !colorsTab) {
           console.log('Initializing ColorsTab')
           if (typeof ColorsTab !== 'undefined') {
             // Check if we've already completed a full scan for this URL
@@ -237,20 +226,13 @@ document.addEventListener('DOMContentLoaded', function () {
             const hasScannedThisUrl =
               currentUrl && scannedUrls[currentUrl] === true
 
-            colorsTab = new ColorsTab()
+            // Pass the scan status directly to the ColorsTab constructor
+            colorsTab = new ColorsTab(hasScannedThisUrl)
 
-            // Only auto-start the scrolling if we haven't already scanned this URL
-            if (hasScannedThisUrl) {
-              console.log(
-                'Full color scan already completed for this URL, skipping auto-scroll'
-              )
-              // Just make sure we have the latest colors
-              colorsTab.analyzeColors()
-            } else if (currentUrl) {
-              // Mark that we've scanned this URL
+            // If we haven't scanned yet, mark that we've now scanned this URL
+            if (!hasScannedThisUrl && currentUrl) {
               scannedUrls[currentUrl] = true
               localStorage.setItem('scannedUrls', JSON.stringify(scannedUrls))
-              // Proceed with full scan
             }
 
             // Check if we have stored colors from animations/delayed loading
@@ -389,12 +371,13 @@ document.addEventListener('DOMContentLoaded', function () {
               const hasScannedThisUrl =
                 currentUrl && scannedUrls[currentUrl] === true
 
-              // Always create a new instance to get fresh data
-              colorsTab = new ColorsTab()
+              // Pass the scan status directly to the constructor
+              colorsTab = new ColorsTab(hasScannedThisUrl)
 
-              // If needed, set this flag to indicate we've already scanned this URL
-              if (hasScannedThisUrl) {
-                colorsTab.hasScannedUrl = true
+              // If we haven't scanned yet, mark that we've now scanned this URL
+              if (!hasScannedThisUrl && currentUrl) {
+                scannedUrls[currentUrl] = true
+                localStorage.setItem('scannedUrls', JSON.stringify(scannedUrls))
               }
 
               // Check if we have stored updated colors from animations/delayed loading
