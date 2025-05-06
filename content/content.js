@@ -101,6 +101,22 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
         sendResponse({ error: 'Failed to analyze body font' })
       })
     return true // Keep the message channel open for async response
+  } else if (request.action === 'startAutoScroll') {
+    autoScrollPageForColorAnalysis()
+      .then((results) => {
+        sendResponse({
+          status: 'complete',
+          colors: results,
+        })
+      })
+      .catch((error) => {
+        console.error('Error during auto-scroll analysis:', error)
+        sendResponse({
+          error: 'Failed to complete auto-scroll analysis',
+          status: 'error',
+        })
+      })
+    return true // Keep the message channel open for async response
   }
 })
 
@@ -691,10 +707,6 @@ async function analyzeColors() {
     // Add flag to indicate this is NOT from element selection
     results._isFromElementSelection = false
 
-    // Return initial results immediately
-    // But also schedule additional scans to catch animations and delayed content
-    scheduleFollowupScans(results)
-
     return results
   } catch (error) {
     console.error('Error in analyzeColors:', error)
@@ -720,6 +732,10 @@ async function performColorAnalysis() {
 
   // Process each element
   elements.forEach((element) => {
+    // Skip elements created by our extension
+    if (element.getAttribute('data-extension-element') === 'true') {
+      return
+    }
     // Skip elements without dimensions
     const rect = element.getBoundingClientRect()
     if (rect.width === 0 || rect.height === 0) {
@@ -856,56 +872,181 @@ async function performColorAnalysis() {
   }
 }
 
-// Schedule follow-up scans to catch animations and delayed content
-function scheduleFollowupScans(initialResults) {
-  // Common animation/transition durations to check after
-  const timings = [500, 1000, 2000]
+// Smooth scrolling with minimal pause at bottom
+async function autoScrollPageForColorAnalysis() {
+  console.log('Starting smooth auto-scroll for comprehensive color analysis...')
 
-  // Scan after each timing
-  timings.forEach((timing) => {
-    setTimeout(async () => {
-      try {
-        // Perform another analysis
-        const newResults = await performColorAnalysis()
+  // Get total scrollable height
+  const totalHeight = Math.max(
+    document.body.scrollHeight,
+    document.body.offsetHeight,
+    document.documentElement.clientHeight,
+    document.documentElement.scrollHeight,
+    document.documentElement.offsetHeight
+  )
 
-        // Check if we found new colors
-        const hasNewColors = hasNewColorData(initialResults, newResults)
+  // Create a visual indicator that scrolling is happening
+  const indicator = document.createElement('div')
+  indicator.setAttribute('data-extension-element', 'true') // Add this line
+  indicator.style.position = 'fixed'
+  indicator.style.right = '20px'
+  indicator.style.bottom = '20px'
+  indicator.style.backgroundColor = 'rgba(20, 72, 255, 0.8)'
+  indicator.style.color = 'white'
+  indicator.style.padding = '8px 12px'
+  indicator.style.borderRadius = '4px'
+  indicator.style.zIndex = '999999'
+  indicator.style.fontFamily = 'Arial, sans-serif'
+  indicator.style.fontSize = '14px'
+  indicator.textContent = 'Scanning colors...'
+  document.body.appendChild(indicator)
 
-        if (hasNewColors) {
-          // Merge the results
-          const mergedResults = mergeColorResults(initialResults, newResults)
+  try {
+    // Configure animation parameters
+    const scrollDuration = 2000 // Total time to scroll down in ms
+    const returnDuration = 1500 // Total time to scroll back up in ms
+    const bottomPause = 300 // Shorter pause at bottom (just enough to capture colors)
+    const initialPosition = window.scrollY
 
-          // Preserve the _isFromElementSelection flag
-          mergedResults._isFromElementSelection =
-            initialResults._isFromElementSelection
-
-          // Send the updated results to the popup
-          chrome.runtime.sendMessage({
-            action: 'colorUpdateAvailable',
-            colors: mergedResults,
-          })
-
-          // Update our reference for future comparisons
-          initialResults = mergedResults
-        }
-      } catch (error) {
-        console.error(`Error in follow-up scan (${timing}ms):`, error)
-      }
-    }, timing)
-  })
-}
-
-// Check if new color data contains colors not in the original data
-function hasNewColorData(originalData, newData) {
-  // Check for new colors in each category
-  for (const category of ['background', 'text', 'border']) {
-    for (const color of newData[category]) {
-      if (!originalData[category].includes(color)) {
-        return true
-      }
+    // Update the reportProgress function in autoScrollPageForColorAnalysis
+    const reportProgress = (percent) => {
+      const roundedPercent = Math.round(percent) // Round to whole number
+      chrome.runtime.sendMessage({
+        action: 'colorScanProgress',
+        progress: Math.min(roundedPercent, 100),
+      })
+      indicator.textContent = `Scanning colors: ${Math.min(
+        roundedPercent,
+        100
+      )}%`
     }
+
+    // Easing function for smoother animation
+    function easeInOutCubic(x) {
+      return x < 0.5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2
+    }
+
+    // Combined smooth scroll down, brief pause, then up - all in one animation
+    const smoothScrollDownAndUp = () => {
+      return new Promise((resolve) => {
+        const startTime = performance.now()
+        const totalDuration = scrollDuration + bottomPause + returnDuration
+
+        // Animate scrolling
+        const scrollStep = (timestamp) => {
+          const elapsed = timestamp - startTime
+          const totalProgress = Math.min(elapsed / totalDuration, 1)
+
+          // Calculate which phase we're in
+          if (totalProgress <= scrollDuration / totalDuration) {
+            // Phase 1: Scrolling down
+            const downProgress = elapsed / scrollDuration
+            const easedProgress = easeInOutCubic(downProgress)
+
+            // Calculate position
+            const targetPosition =
+              initialPosition + (totalHeight - initialPosition) * easedProgress
+
+            // Scroll to position
+            window.scrollTo(0, targetPosition)
+            document.documentElement.scrollTop = targetPosition
+
+            // Report progress (0-45%)
+            reportProgress(downProgress * 45)
+          } else if (
+            totalProgress <=
+            (scrollDuration + bottomPause) / totalDuration
+          ) {
+            // Phase 2: Brief pause at bottom - do nothing with scrolling
+            // But still update progress from 45-55%
+            const pauseProgress = (elapsed - scrollDuration) / bottomPause
+            reportProgress(45 + pauseProgress * 10)
+
+            // Trigger a color analysis while at the bottom (async but no waiting)
+            if (pauseProgress > 0.5 && pauseProgress < 0.6) {
+              performColorAnalysis().then((colors) => {
+                chrome.runtime.sendMessage({
+                  action: 'colorUpdateDuringScroll',
+                  colors: colors,
+                  progress: 50,
+                })
+              })
+            }
+          } else {
+            // Phase 3: Scrolling up
+            const upElapsed = elapsed - scrollDuration - bottomPause
+            const upProgress = upElapsed / returnDuration
+            const easedUpProgress = easeInOutCubic(upProgress)
+
+            // Calculate position for scrolling up
+            const targetPosition = totalHeight * (1 - easedUpProgress)
+
+            // Scroll to position
+            window.scrollTo(0, targetPosition)
+            document.documentElement.scrollTop = targetPosition
+
+            // Report progress (55-100%)
+            reportProgress(55 + upProgress * 45)
+          }
+
+          // Continue animation if not complete
+          if (totalProgress < 1) {
+            window.requestAnimationFrame(scrollStep)
+          } else {
+            // Wait a moment for final analysis at top
+            setTimeout(resolve, 300)
+          }
+        }
+
+        // Start animation
+        window.requestAnimationFrame(scrollStep)
+      })
+    }
+
+    // First scan at current position
+    let colors = await performColorAnalysis()
+
+    // Perform the smooth scrolling
+    console.log('Smoothly scrolling down and up...')
+    await smoothScrollDownAndUp()
+
+    // Final scan at top
+    console.log('Performing final color scan...')
+    const finalColors = await performColorAnalysis()
+
+    // Remove the indicator
+    document.body.removeChild(indicator)
+
+    // Report complete
+    chrome.runtime.sendMessage({
+      action: 'colorScanComplete',
+      colors: finalColors,
+      progress: 100,
+    })
+
+    console.log('Smooth auto-scroll color analysis complete')
+    return finalColors
+  } catch (error) {
+    console.error('Error during auto-scroll:', error)
+
+    // Clean up
+    if (document.body.contains(indicator)) {
+      document.body.removeChild(indicator)
+    }
+
+    // Return to top
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+
+    // Report error
+    chrome.runtime.sendMessage({
+      action: 'colorScanComplete',
+      error: error.message,
+      progress: 100,
+    })
+
+    // Return any colors we managed to collect
+    return await performColorAnalysis()
   }
-  return false
 }
 
 // Merge color results, avoiding duplicates

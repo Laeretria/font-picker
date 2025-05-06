@@ -217,9 +217,24 @@ document.addEventListener('DOMContentLoaded', function () {
         } else if (tabId === 'colors' && !colorsTab) {
           console.log('Initializing ColorsTab')
           if (typeof ColorsTab !== 'undefined') {
+            // Create a flag in localStorage to track if we've already done a full scan
+            const hasScanned = localStorage.getItem('fullColorScanComplete')
+
             colorsTab = new ColorsTab()
 
-            // Check if we have stored updated colors from animations/delayed loading
+            // Only auto-start the scrolling if we haven't already completed a scan this session
+            if (hasScanned === 'true') {
+              console.log(
+                'Full color scan already completed this session, skipping auto-scroll'
+              )
+              // Just make sure we have the latest colors
+              colorsTab.analyzeColors()
+            } else {
+              // Mark that we've done a full scan
+              localStorage.setItem('fullColorScanComplete', 'true')
+            }
+
+            // Check if we have stored colors from animations/delayed loading
             const latestColorData = localStorage.getItem('latestColorData')
             if (latestColorData) {
               try {
@@ -536,6 +551,58 @@ document.addEventListener('DOMContentLoaded', function () {
       return true
     }
 
+    if (request.action === 'colorScanProgress') {
+      console.log('Color scan progress:', request.progress + '%')
+
+      // Update progress UI if colorsTab is initialized
+      if (colorsTab) {
+        colorsTab.updateScanProgress(request.progress)
+      }
+
+      sendResponse({ status: 'ok' })
+      return true
+    }
+
+    // Handle color updates during scrolling
+    if (request.action === 'colorUpdateDuringScroll') {
+      console.log(
+        'Color update during scroll, progress:',
+        request.progress + '%'
+      )
+
+      // Update the colors UI with new colors if colorsTab is initialized
+      if (colorsTab) {
+        // Update progress
+        colorsTab.updateScanProgress(request.progress)
+
+        // Update colors display with new colors
+        if (request.colors) {
+          colorsTab.updateColorUI(request.colors)
+        }
+      }
+
+      sendResponse({ status: 'ok' })
+      return true
+    }
+
+    // Handle completion of color scan
+    if (request.action === 'colorScanComplete') {
+      console.log('Color scan complete')
+
+      if (colorsTab) {
+        // Hide the loading overlay
+        colorsTab.hideLoadingOverlay()
+
+        // Final update of colors with complete results
+        if (request.colors) {
+          colorsTab.updateColorUI(request.colors)
+        }
+      }
+
+      sendResponse({ status: 'ok' })
+      return true
+    }
+
     // Ensure proper sizing
     if (document.querySelector('.app-container')) {
       document.querySelector('.app-container').style.height = '550px'
@@ -547,6 +614,7 @@ document.addEventListener('DOMContentLoaded', function () {
     if (mainContent) {
       mainContent.style.overflowX = 'hidden'
     }
+
     return true // Keep the message channel open for async response
   })
 

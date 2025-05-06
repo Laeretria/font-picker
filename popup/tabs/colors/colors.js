@@ -22,6 +22,9 @@ class ColorsTab {
     // Set up event listeners
     this.setupEventListeners()
 
+    // Start automatic color analysis with scrolling
+    this.startAutoScrollAnalysis()
+
     // Initial analysis
     this.analyzeColors()
   }
@@ -83,6 +86,131 @@ class ColorsTab {
         }
       )
     })
+  }
+
+  // Start auto-scroll analysis
+  startAutoScrollAnalysis() {
+    // Show loading overlay
+    this.showLoadingOverlay()
+
+    chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+      chrome.tabs.sendMessage(
+        tabs[0].id,
+        { action: 'startAutoScroll' },
+        (response) => {
+          // Response will come through progress messages,
+          // so we don't need to handle it here
+        }
+      )
+    })
+  }
+
+  // Show loading overlay with progress
+  showLoadingOverlay(progress = 0) {
+    let overlay = document.getElementById('color-scan-overlay')
+
+    // Create overlay if it doesn't exist
+    if (!overlay) {
+      overlay = document.createElement('div')
+      overlay.id = 'color-scan-overlay'
+      overlay.style.position = 'absolute'
+      overlay.style.top = '0'
+      overlay.style.left = '0'
+      overlay.style.width = '100%'
+      overlay.style.height = '100%'
+      overlay.style.backgroundColor = 'rgba(255, 255, 255, 0.9)'
+      overlay.style.display = 'flex'
+      overlay.style.flexDirection = 'column'
+      overlay.style.alignItems = 'center'
+      overlay.style.justifyContent = 'flex-start' // Changed from 'center' to 'flex-start'
+      overlay.style.paddingTop = '200px' // Add some padding at the top
+      overlay.style.zIndex = '1000'
+
+      // Add to the colors tab
+      const colorsTab = document.getElementById('colors-tab')
+      if (colorsTab) {
+        colorsTab.style.position = 'relative'
+        colorsTab.appendChild(overlay)
+      }
+    }
+
+    // Update or create progress content
+    let progressContent = overlay.querySelector('.progress-content')
+    if (!progressContent) {
+      progressContent = document.createElement('div')
+      progressContent.className = 'progress-content'
+      progressContent.style.textAlign = 'center'
+
+      const message = document.createElement('p')
+      message.textContent = 'Pagina scannen voor alle kleuren...'
+      message.style.fontFamily = 'Regola-Medium, sans-serif'
+      message.style.fontSize = '16px'
+      message.style.marginBottom = '5px'
+
+      const subMessage = document.createElement('p')
+      subMessage.textContent =
+        'Automatisch scrollen om alle kleuren te detecteren'
+      subMessage.style.fontFamily = 'Regola-Regular, sans-serif'
+      subMessage.style.fontSize = '14px'
+      subMessage.style.marginBottom = '15px'
+      subMessage.style.color = '#666'
+
+      const progressContainer = document.createElement('div')
+      progressContainer.style.width = '80%'
+      progressContainer.style.height = '10px'
+      progressContainer.style.backgroundColor = '#eee'
+      progressContainer.style.borderRadius = '5px'
+      progressContainer.style.overflow = 'hidden'
+      progressContainer.style.margin = '0 auto'
+
+      const progressBar = document.createElement('div')
+      progressBar.className = 'progress-bar'
+      progressBar.style.width = `${progress}%`
+      progressBar.style.height = '100%'
+      progressBar.style.backgroundColor = '#1448ff'
+      progressBar.style.transition = 'width 0.3s ease'
+
+      const progressText = document.createElement('p')
+      progressText.className = 'progress-text'
+      // Format without decimal places, just whole numbers
+      progressText.textContent = `${Math.round(progress)}% complete`
+      progressText.style.marginTop = '8px'
+      progressText.style.fontSize = '14px'
+
+      progressContainer.appendChild(progressBar)
+      progressContent.appendChild(message)
+      progressContent.appendChild(subMessage)
+      progressContent.appendChild(progressContainer)
+      progressContent.appendChild(progressText)
+
+      overlay.appendChild(progressContent)
+    } else {
+      // Update existing progress
+      const progressBar = overlay.querySelector('.progress-bar')
+      const progressText = overlay.querySelector('.progress-text')
+
+      if (progressBar) {
+        progressBar.style.width = `${progress}%`
+      }
+
+      if (progressText) {
+        // Format without decimal places, just whole numbers
+        progressText.textContent = `${Math.round(progress)}% complete`
+      }
+    }
+  }
+
+  // Hide loading overlay
+  hideLoadingOverlay() {
+    const overlay = document.getElementById('color-scan-overlay')
+    if (overlay) {
+      overlay.remove()
+    }
+  }
+
+  // Update progress
+  updateScanProgress(progress) {
+    this.showLoadingOverlay(progress)
   }
 
   updateColorUI(colorData) {
