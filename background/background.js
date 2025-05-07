@@ -220,7 +220,12 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     })
 
     // If we have recently selected data, send it to the popup
-    if (lastSelectedData && Date.now() - lastSelectedData.timestamp < 30000) {
+    if (
+      lastSelectedData &&
+      lastSelectedData.fontData &&
+      lastSelectedData.colorData &&
+      Date.now() - lastSelectedData.timestamp < 30000
+    ) {
       // Send the data back to the popup that just opened
       setTimeout(() => {
         chrome.runtime.sendMessage({
@@ -354,6 +359,11 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     safelyStoreData('selectedElementFontData', request.fontData)
     safelyStoreData('selectedElementColorData', request.colorData)
     safelyStoreData('lastSelectionTimestamp', Date.now())
+
+    // Set flag in chrome.storage.local instead of localStorage
+    chrome.storage.local.set({ pendingElementSelection: true }, function () {
+      console.log('Set pending element selection flag in chrome.storage')
+    })
 
     try {
       // Try to show a notification, but handle errors gracefully

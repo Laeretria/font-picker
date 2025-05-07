@@ -423,6 +423,11 @@ function selectElement(e) {
 
   // Try multiple approaches to ensure data is captured
   try {
+    // SET THE FLAG before sending the message - use chrome.storage instead of localStorage
+    chrome.storage.local.set({ pendingElementSelection: true }, function () {
+      console.log('Flag set for pending element selection')
+    })
+
     // Send to background script
     chrome.runtime.sendMessage(
       {
