@@ -78,7 +78,7 @@ class OverviewTab {
             )
           })
 
-          // Modified section of the Promise.all handler in the analyzeCurrentPageHeadingsAndBody method
+          // Modified section to display body font FIRST, then headings
           Promise.all([bodyFontPromise, headingsPromise])
             .then(([bodyFontData, headingsData]) => {
               // Clear container before adding content
@@ -86,7 +86,14 @@ class OverviewTab {
 
               let contentAdded = false
 
-              // Add the headings FIRST
+              // Add the body font data FIRST (if available)
+              if (bodyFontData) {
+                console.log('Adding body font element with data:', bodyFontData)
+                this.addBodyFontElement(bodyFontData)
+                contentAdded = true
+              }
+
+              // Add the headings SECOND
               if (headingsData && headingsData.length > 0) {
                 // Process unique heading levels - take only first of each type
                 const uniqueHeadings = this.getUniqueHeadingLevels(headingsData)
@@ -98,13 +105,6 @@ class OverviewTab {
                   })
                   contentAdded = true
                 }
-              }
-
-              // Add the body font data LAST (if available)
-              if (bodyFontData) {
-                console.log('Adding body font element with data:', bodyFontData)
-                this.addBodyFontElement(bodyFontData)
-                contentAdded = true
               }
 
               // Show message if no content was added
@@ -202,10 +202,6 @@ class OverviewTab {
       bodyCard.className = 'heading-card ultra-compact'
       bodyCard.dataset.level = 'body'
 
-      // Add some basic styling to make it stand out
-      bodyCard.style.borderLeft = '3px solid var(--primary-color)'
-      bodyCard.style.marginBottom = '15px'
-
       // Create horizontal layout container
       const cardLayout = document.createElement('div')
       cardLayout.className = 'card-layout'
@@ -216,7 +212,7 @@ class OverviewTab {
 
       const headingLevel = document.createElement('div')
       headingLevel.className = 'heading-level'
-      headingLevel.textContent = 'BODY'
+      headingLevel.textContent = 'Tekst'
       headingType.appendChild(headingLevel)
 
       // Right column - heading details

@@ -49,14 +49,14 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 6px;
-  padding-bottom: 6px;
+  margin-bottom: 8px;
+  padding-bottom: 8px;
   border-bottom: 1px solid var(--border-color);
 }
 
 .heading-card.ultra-compact .font-family {
-  font-weight: 500;
-  font-size: 13px;
+  font-family: 'Regola-regular';
+  font-size: 14px;
   color: var(--heading);
   white-space: nowrap;
   overflow: hidden;
