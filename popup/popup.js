@@ -50,6 +50,7 @@ document.addEventListener('DOMContentLoaded', function () {
     let colorsTab = null
     let pickerActive = false
     let overviewTab = null
+    let colorScanInProgress = false
 
     // Track current tab for tab switching detection
     let currentTabId = null
@@ -158,6 +159,23 @@ document.addEventListener('DOMContentLoaded', function () {
       })
     }
 
+    // Add a function to toggle tab navigation:
+    function toggleTabNavigation(enable) {
+      const navItems = document.querySelectorAll('.nav-item')
+      navItems.forEach((item) => {
+        if (enable) {
+          item.classList.remove('disabled')
+          item.style.pointerEvents = 'auto'
+          item.style.opacity = '1'
+        } else {
+          item.classList.add('disabled')
+          item.style.pointerEvents = 'none'
+          item.style.opacity = '0.5'
+        }
+      })
+      colorScanInProgress = !enable
+    }
+
     // Function to clear ALL storage locations
     function clearAllStorageData() {
       console.log('PERFORMING COMPLETE DATA CLEAR')
@@ -248,6 +266,11 @@ document.addEventListener('DOMContentLoaded', function () {
 
     navItems.forEach((item) => {
       item.addEventListener('click', function () {
+        // Don't allow tab switching if color scan is in progress
+        if (colorScanInProgress) {
+          console.log('Tab switching disabled during color scan')
+          return
+        }
         console.log('Tab clicked:', this.getAttribute('data-tab'))
 
         // Get the target tab ID
@@ -687,6 +710,11 @@ document.addEventListener('DOMContentLoaded', function () {
       if (request.action === 'colorScanProgress') {
         console.log('Color scan progress:', request.progress + '%')
 
+        // If this is the first progress update, disable tab navigation
+        if (request.progress < 5 && !colorScanInProgress) {
+          toggleTabNavigation(false)
+        }
+
         // Update progress UI if colorsTab is initialized
         if (colorsTab) {
           colorsTab.updateScanProgress(request.progress)
@@ -721,6 +749,9 @@ document.addEventListener('DOMContentLoaded', function () {
       // Handle completion of color scan
       if (request.action === 'colorScanComplete') {
         console.log('Color scan complete')
+
+        // Re-enable tab navigation
+        toggleTabNavigation(true)
 
         if (colorsTab) {
           // Hide the loading overlay

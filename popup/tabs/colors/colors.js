@@ -95,7 +95,7 @@ class ColorsTab {
     })
   }
 
-  // Start auto-scroll analysis
+  // Modify the startAutoScrollAnalysis method in the ColorsTab class:
   startAutoScrollAnalysis() {
     // Show loading overlay
     this.showLoadingOverlay()
