@@ -147,9 +147,17 @@
         <!-- Font Tab -->
         <div class="tab-content" id="font-tab">
           <h2>Selecteer element</h2>
-          <p class="description-font-tab instruction-message">
-            Klik op ‘Selecteer element’ om alle font details te bekijken.
-          </p>
+          <div class="instruction-row description-font-tab">
+            <p class="">
+              Klik op 'Selecteer element' om alle font details te bekijken.
+            </p>
+            <button
+              id="inline-element-picker-btn"
+              class="element-picker-button"
+            >
+              Selecteer element
+            </button>
+          </div>
           <!-- Body Font - Restructured -->
           <div class="font-card">
             <div class="font-card-header">
@@ -180,11 +188,68 @@
               <div class="font-value-container">
                 <p id="body-font" class="font-value"></p>
                 <div class="font-color-preview">
+                  <!-- Format dropdown with arrow -->
+                  <div class="color-format-dropdown">
+                    <div class="dropdown-button">
+                      <span id="current-format">HEX</span>
+                      <svg
+                        class="dropdown-arrow"
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="12"
+                        height="12"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                      >
+                        <polyline points="6 9 12 15 18 9"></polyline>
+                      </svg>
+                    </div>
+                    <div class="dropdown-menu">
+                      <div class="dropdown-item" data-format="HEX">HEX</div>
+                      <div class="dropdown-item" data-format="RGB">RGB</div>
+                      <div class="dropdown-item" data-format="HSL">HSL</div>
+                    </div>
+                  </div>
+
+                  <!-- Color code display -->
+                  <div class="color-code" id="color-code"></div>
+
+                  <!-- Color swatch (existing) -->
                   <div
                     class="color-swatch"
                     id="text-color-swatch"
                     title="Tekstkleur"
                   ></div>
+
+                  <!-- Copy button -->
+                  <div class="copy-color-button" title="Kopieer kleurcode">
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="16"
+                      height="16"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    >
+                      <rect
+                        x="9"
+                        y="9"
+                        width="13"
+                        height="13"
+                        rx="2"
+                        ry="2"
+                      ></rect>
+                      <path
+                        d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"
+                      ></path>
+                    </svg>
+                  </div>
                 </div>
               </div>
 

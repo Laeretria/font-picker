@@ -414,6 +414,44 @@ document.addEventListener('DOMContentLoaded', function () {
       })
     }
 
+    // Inline element picker functionality
+    const inlineElementPickerBtn = document.getElementById(
+      'inline-element-picker-btn'
+    )
+    if (inlineElementPickerBtn) {
+      inlineElementPickerBtn.addEventListener('click', function () {
+        chrome.tabs.query(
+          { active: true, currentWindow: true },
+          function (tabs) {
+            if (tabs && tabs[0] && tabs[0].id) {
+              // Toggle picker state
+              pickerActive = !pickerActive
+
+              // Send message to toggle picker in the content script
+              chrome.tabs.sendMessage(tabs[0].id, { action: 'togglePicker' })
+
+              // Update both buttons' text based on picker state
+              if (elementPickerBtn) {
+                elementPickerBtn.textContent = pickerActive
+                  ? 'Cancel Selection'
+                  : 'Pick Element'
+              }
+              inlineElementPickerBtn.textContent = pickerActive
+                ? 'Cancel Selection'
+                : 'Selecteer element'
+
+              // Close the popup window when picker is activated
+              if (pickerActive) {
+                window.close()
+              }
+            } else {
+              console.error('Unable to find active tab')
+            }
+          }
+        )
+      })
+    }
+
     // Always refresh data on popup open
     chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
       if (tabs && tabs[0] && tabs[0].id) {

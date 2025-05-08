@@ -11,6 +11,13 @@ class FontTab {
     this.cssSnippetElement = document.getElementById('css-snippet')
     this.copySnippetButton = document.getElementById('copy-snippet-btn')
     this.textColorSwatch = document.getElementById('text-color-swatch')
+    this.colorDropdown = document.querySelector('.color-format-dropdown')
+    this.dropdownButton = document.querySelector('.dropdown-button')
+    this.dropdownMenu = document.querySelector('.dropdown-menu')
+    this.dropdownArrow = document.querySelector('.dropdown-arrow')
+    this.currentFormatDisplay = document.getElementById('current-format')
+    this.colorCodeDisplay = document.getElementById('color-code')
+    this.copyColorButton = document.querySelector('.copy-color-button')
 
     // Track current font data - initialize with empty values
     this.currentFontData = {
@@ -42,12 +49,24 @@ class FontTab {
   }
 
   // Initialize method
-  // In the font.js file, modify the initialize method
   initialize() {
     console.log('FontTab: Initializing and clearing all values')
 
     // Clear all displayed values FIRST before any other operations
     this.clearAllFontValues()
+
+    // Make sure the new UI elements are hidden initially
+    if (this.colorCodeDisplay) {
+      this.colorCodeDisplay.style.display = 'none'
+    }
+
+    if (this.colorDropdown) {
+      this.colorDropdown.style.display = 'none'
+    }
+
+    if (this.copyColorButton) {
+      this.copyColorButton.style.display = 'none'
+    }
 
     // AGGRESSIVE CHECK: Check if current URL matches the URL when the data was collected
     chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
@@ -106,43 +125,8 @@ class FontTab {
         element: '',
       },
     }
-
-    // Add check mark animation styles
-    const style = document.createElement('style')
-    style.textContent = `
-    .check-mark-overlay {
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      background-color: rgba(0, 0, 0, 0.3);
-      border-radius: 4px;
-      animation: fadeIn 0.2s ease-in-out;
-    }
-    
-    .check-icon {
-      stroke: white;
-      animation: scaleIn 0.3s ease-out;
-    }
-    
-    @keyframes fadeIn {
-      from { opacity: 0; }
-      to { opacity: 1; }
-    }
-    
-    @keyframes scaleIn {
-      from { transform: scale(0); }
-      to { transform: scale(1); }
-    }
-  `
-    document.head.appendChild(style)
   }
 
-  // Clear all font values method
   clearAllFontValues() {
     console.log('Clearing all font values')
     // Clear font names
@@ -176,8 +160,24 @@ class FontTab {
       this.textColorSwatch.style.backgroundColor = ''
       this.textColorSwatch.title = 'Tekstkleur'
       this.textColorSwatch.dataset.color = ''
+      this.textColorSwatch.style.display = 'none' // Hide when no data
     }
-    console.log('Cleared color swatch')
+
+    // Clear and hide color code and dropdown
+    if (this.colorCodeDisplay) {
+      this.colorCodeDisplay.textContent = ''
+      this.colorCodeDisplay.style.display = 'none'
+    }
+
+    if (this.colorDropdown) {
+      this.colorDropdown.style.display = 'none'
+    }
+
+    if (this.copyColorButton) {
+      this.copyColorButton.style.display = 'none'
+    }
+
+    console.log('Cleared color swatch and related elements')
 
     // Reset current color data
     this.currentColorData = {
@@ -185,9 +185,75 @@ class FontTab {
     }
   }
 
+  // Add this method right after initialize() method
+  setupColorDropdown() {
+    // Toggle dropdown menu when button is clicked
+    if (this.dropdownButton) {
+      this.dropdownButton.addEventListener('click', (e) => {
+        e.stopPropagation()
+        this.toggleDropdownMenu()
+      })
+    }
+
+    // Handle format selection
+    if (this.dropdownMenu) {
+      const items = this.dropdownMenu.querySelectorAll('.dropdown-item')
+      items.forEach((item) => {
+        item.addEventListener('click', (e) => {
+          e.stopPropagation()
+          const newFormat = item.getAttribute('data-format')
+          this.currentColorFormat = newFormat
+          this.currentFormatDisplay.textContent = newFormat
+
+          // Update displayed color
+          this.setColorSwatchFormat()
+
+          // Close the dropdown
+          this.closeDropdownMenu()
+        })
+      })
+    }
+
+    // Handle copy button click
+    if (this.copyColorButton) {
+      this.copyColorButton.addEventListener('click', () => {
+        const colorValue = this.textColorSwatch.dataset.color
+        if (colorValue) {
+          this.copyColorToClipboard(colorValue)
+        }
+      })
+    }
+
+    // Close dropdown when clicking outside
+    document.addEventListener('click', () => {
+      this.closeDropdownMenu()
+    })
+  }
+
+  // Add methods for dropdown functionality
+  toggleDropdownMenu() {
+    const isVisible = this.dropdownMenu.classList.contains('show')
+
+    if (isVisible) {
+      this.closeDropdownMenu()
+    } else {
+      this.openDropdownMenu()
+    }
+  }
+
+  openDropdownMenu() {
+    this.dropdownMenu.classList.add('show')
+    this.dropdownArrow.style.transform = 'rotate(180deg)'
+  }
+
+  closeDropdownMenu() {
+    this.dropdownMenu.classList.remove('show')
+    this.dropdownArrow.style.transform = 'rotate(0)'
+  }
+
   // Update setupEventListeners method for the color swatch
   setupEventListeners() {
-    // Add event listener for copy snippet button
+    // Add copy snippet button event listener
     if (this.copySnippetButton) {
       this.copySnippetButton.addEventListener('click', (e) => {
         const textToCopy = this.cssSnippetElement.textContent
@@ -214,33 +280,14 @@ class FontTab {
             if (option.dataset.format === 'variable') {
               this.copySnippetButton.style.right = '20px'
             } else {
-              this.copySnippetButton.style.right = '5px'
+              this.copySnippetButton.style.right = '20px'
             }
           }
         })
       })
 
-    // Update this for the color swatch click event
-    if (this.textColorSwatch) {
-      this.textColorSwatch.addEventListener('click', (e) => {
-        // If Shift key is pressed, cycle through formats
-        if (e.shiftKey) {
-          this.cycleColorFormat()
-          return
-        }
-
-        // Otherwise, copy the current format
-        const colorValue = this.textColorSwatch.dataset.color
-        if (colorValue) {
-          this.copyColorToClipboard(colorValue)
-        }
-      })
-
-      // Add double click to cycle formats
-      this.textColorSwatch.addEventListener('dblclick', () => {
-        this.cycleColorFormat()
-      })
-    }
+    // Setup the color dropdown
+    this.setupColorDropdown()
   }
 
   // Add color format conversion methods
@@ -326,62 +373,10 @@ class FontTab {
       .then(() => {
         // Show toast notification
         this.showColorToastNotification(colorText)
-
-        // Show check mark animation on the color swatch
-        this.showCheckMarkAnimation(this.textColorSwatch)
       })
       .catch((err) => {
         console.error('Could not copy color: ', err)
       })
-  }
-
-  // Add this method to the FontTab class
-  showCheckMarkAnimation(element) {
-    // Find the color box inside the element
-    const colorBox = element || this.textColorSwatch
-    if (!colorBox) return
-
-    // Create check mark overlay
-    const checkMarkOverlay = document.createElement('div')
-    checkMarkOverlay.className = 'check-mark-overlay'
-
-    // Create SVG check mark icon
-    const checkSvg = document.createElementNS(
-      'http://www.w3.org/2000/svg',
-      'svg'
-    )
-    checkSvg.setAttribute('viewBox', '0 0 24 24')
-    checkSvg.setAttribute('width', '12')
-    checkSvg.setAttribute('height', '12')
-    checkSvg.setAttribute('stroke', 'currentColor')
-    checkSvg.setAttribute('stroke-width', '3')
-    checkSvg.setAttribute('stroke-linecap', 'round')
-    checkSvg.setAttribute('stroke-linejoin', 'round')
-    checkSvg.setAttribute('fill', 'none')
-    checkSvg.classList.add('check-icon')
-
-    // Create check mark path
-    const path = document.createElementNS('http://www.w3.org/2000/svg', 'path')
-    path.setAttribute('d', 'M20 6L9 17l-5-5')
-    checkSvg.appendChild(path)
-
-    // Add check mark to overlay
-    checkMarkOverlay.appendChild(checkSvg)
-
-    // Add the overlay to the color box
-    colorBox.style.position = 'relative'
-    colorBox.appendChild(checkMarkOverlay)
-
-    // Remove after animation completes
-    setTimeout(() => {
-      try {
-        if (colorBox.contains(checkMarkOverlay)) {
-          colorBox.removeChild(checkMarkOverlay)
-        }
-      } catch (e) {
-        console.error('Error removing check mark overlay:', e)
-      }
-    }, 1500)
   }
 
   // Update the showColorToastNotification method
@@ -549,7 +544,6 @@ class FontTab {
     this.updateCSSSnippet()
   }
 
-  // Modify the updateColorUI method
   updateColorUI(colorData) {
     // If no color data or no text color, clear the color swatch
     if (!colorData || !colorData.text) {
@@ -559,8 +553,20 @@ class FontTab {
         this.textColorSwatch.dataset.color = ''
         this.textColorSwatch.style.display = 'none' // Hide the swatch when no data
 
-        // Hide format indicator if it exists
-        this.hideFormatIndicator()
+        // Hide the color code display
+        if (this.colorCodeDisplay) {
+          this.colorCodeDisplay.textContent = ''
+          this.colorCodeDisplay.style.display = 'none'
+        }
+
+        // Hide dropdown and copy button
+        if (this.colorDropdown) {
+          this.colorDropdown.style.display = 'none'
+        }
+
+        if (this.copyColorButton) {
+          this.copyColorButton.style.display = 'none'
+        }
       }
       return
     }
@@ -579,9 +585,20 @@ class FontTab {
       this.textColorSwatch.dataset.hexColor = hexColor
       this.textColorSwatch.dataset.rgbColor = rgbColor
       this.textColorSwatch.dataset.hslColor = hslColor
+    }
 
-      // Set title based on current format
-      this.setColorSwatchFormat()
+    // Show dropdown and copy button
+    if (this.colorDropdown) {
+      this.colorDropdown.style.display = 'block'
+    }
+
+    if (this.copyColorButton) {
+      this.copyColorButton.style.display = 'flex'
+    }
+
+    // Make sure color code is visible
+    if (this.colorCodeDisplay) {
+      this.colorCodeDisplay.style.display = 'block'
     }
 
     // Store the color data with all formats
@@ -591,8 +608,8 @@ class FontTab {
       hsl: hslColor,
     }
 
-    // Create or update format indicator
-    this.updateFormatIndicator()
+    // Apply the current format
+    this.setColorSwatchFormat()
   }
 
   // Update the setColorSwatchFormat method:
@@ -607,111 +624,111 @@ class FontTab {
     const hslColor =
       this.textColorSwatch.dataset.hslColor || this.currentColorData.hsl || ''
 
+    // Update dropdown display
+    if (this.currentFormatDisplay) {
+      this.currentFormatDisplay.textContent = this.currentColorFormat
+    }
+
+    // Get the appropriate color value
+    let colorValue = ''
     switch (this.currentColorFormat) {
       case 'HEX':
-        this.textColorSwatch.dataset.color = hexColor
-        this.textColorSwatch.title = hexColor
-          ? `${hexColor} (klik om te kopiëren)`
-          : 'Tekstkleur'
+        colorValue = hexColor
         break
       case 'RGB':
-        this.textColorSwatch.dataset.color = rgbColor
-        this.textColorSwatch.title = rgbColor
-          ? `${rgbColor} (klik om te kopiëren)`
-          : 'Tekstkleur'
+        colorValue = rgbColor
         break
       case 'HSL':
-        this.textColorSwatch.dataset.color = hslColor
-        this.textColorSwatch.title = hslColor
-          ? `${hslColor} (klik om te kopiëren)`
-          : 'Tekstkleur'
+        colorValue = hslColor
         break
+    }
+
+    // Update color code display
+    if (this.colorCodeDisplay) {
+      this.colorCodeDisplay.textContent = colorValue
+      this.colorCodeDisplay.style.display = colorValue ? 'block' : 'none'
+    }
+
+    // Update color swatch (without clickable title hint)
+    this.textColorSwatch.dataset.color = colorValue
+    this.textColorSwatch.title = colorValue ? colorValue : 'Tekstkleur'
+  }
+
+  showFormatChangeNotification(format) {
+    try {
+      // Find the parent container of the color swatch
+      const parentContainer = this.textColorSwatch.parentElement
+      if (!parentContainer) return
+
+      // Check if notification area exists, create if not
+      let notificationArea = document.getElementById('format-notification-area')
+      if (!notificationArea) {
+        notificationArea = document.createElement('div')
+        notificationArea.id = 'format-notification-area'
+        notificationArea.style.height = '20px' // Fixed height to prevent layout shifts
+        notificationArea.style.fontSize = '12px'
+        notificationArea.style.marginTop = '4px'
+        notificationArea.style.textAlign = 'right'
+        notificationArea.style.color = 'var(--body)'
+
+        // Insert after the parent container
+        parentContainer.parentNode.insertBefore(
+          notificationArea,
+          parentContainer.nextSibling
+        )
+      }
+
+      // Create notification content
+      const notification = document.createElement('div')
+      notification.className = 'format-change-notification'
+      notification.style.display = 'flex'
+      notification.style.alignItems = 'center'
+      notification.style.justifyContent = 'flex-end'
+      notification.style.opacity = '0'
+      notification.style.transition = 'opacity 0.3s ease'
+
+      // Create dot indicator with primary color
+      const dot = document.createElement('div')
+      dot.style.width = '6px'
+      dot.style.height = '6px'
+      dot.style.borderRadius = '50%'
+      dot.style.backgroundColor = 'var(--primary-color)' // Use your primary color variable
+      dot.style.marginRight = '5px'
+
+      // Create text
+      const text = document.createElement('span')
+      text.textContent = `${format} format`
+
+      // Assemble notification
+      notification.appendChild(dot)
+      notification.appendChild(text)
+
+      // Clear previous notification and add new one
+      notificationArea.innerHTML = ''
+      notificationArea.appendChild(notification)
+
+      // Trigger animation
+      setTimeout(() => {
+        notification.style.opacity = '1'
+      }, 10)
+
+      // Remove notification after delay
+      setTimeout(() => {
+        notification.style.opacity = '0'
+
+        // Remove element after fade out
+        setTimeout(() => {
+          if (notificationArea.contains(notification)) {
+            notificationArea.removeChild(notification)
+          }
+        }, 300)
+      }, 2000)
+    } catch (error) {
+      console.error('Error showing format change notification:', error)
     }
   }
 
-  // Add method to cycle through formats
-  cycleColorFormat() {
-    // Cycle through formats: HEX -> RGB -> HSL -> HEX
-    switch (this.currentColorFormat) {
-      case 'HEX':
-        this.currentColorFormat = 'RGB'
-        break
-      case 'RGB':
-        this.currentColorFormat = 'HSL'
-        break
-      case 'HSL':
-        this.currentColorFormat = 'HEX'
-        break
-      default:
-        this.currentColorFormat = 'HEX'
-    }
-
-    // Update color swatch
-    this.setColorSwatchFormat()
-
-    // Update format indicator
-    this.updateFormatIndicator()
-  }
-
-  // Create or update format indicator
-  updateFormatIndicator() {
-    if (!this.textColorSwatch || !this.currentColorData) return
-
-    // Find parent container (usually font-card-header)
-    const parentContainer = this.textColorSwatch.parentElement
-    if (!parentContainer) return
-
-    // Create indicator if it doesn't exist
-    if (!this.formatIndicator) {
-      this.formatIndicator = document.createElement('span')
-      this.formatIndicator.className = 'format-indicator'
-      this.formatIndicator.style.fontSize = '12px'
-      this.formatIndicator.style.marginRight = '4px'
-      this.formatIndicator.style.color = 'var(--body)'
-      this.formatIndicator.style.cursor = 'pointer'
-      this.formatIndicator.style.padding = '3px'
-      this.formatIndicator.style.borderRadius = '4px'
-      this.formatIndicator.style.backgroundColor = 'var(--header-bg)'
-      this.formatIndicator.title = 'Klik om formaat te wisselen'
-
-      // Add event listener to cycle format when clicked
-      this.formatIndicator.addEventListener('click', () => {
-        this.cycleColorFormat()
-      })
-
-      // Insert before the color swatch
-      parentContainer.insertBefore(this.formatIndicator, this.textColorSwatch)
-    }
-
-    // In the updateFormatIndicator method, add these lines:
-    this.formatIndicator.style.transition =
-      'transform 0.2s ease, background-color 0.2s ease'
-
-    this.formatIndicator.addEventListener('mouseenter', () => {
-      this.formatIndicator.style.backgroundColor = 'var(--header-bg)'
-      this.formatIndicator.style.transform = 'scale(1.2)'
-    })
-
-    this.formatIndicator.addEventListener('mouseleave', () => {
-      this.formatIndicator.style.backgroundColor = 'var(--header-bg)'
-      this.formatIndicator.style.transform = 'scale(1)'
-    })
-
-    // Update indicator text
-    this.formatIndicator.textContent = this.currentColorFormat
-
-    // Show the indicator
-    this.formatIndicator.style.display = 'inline-block'
-  }
-
-  // Hide format indicator
-  hideFormatIndicator() {
-    if (this.formatIndicator) {
-      this.formatIndicator.style.display = 'none'
-    }
-  }
-
-  // Add this method after clearAllFontValues
+  // Add this method
   clearColorValues() {
     console.log('Clearing color values')
 

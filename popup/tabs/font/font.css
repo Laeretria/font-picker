@@ -70,21 +70,18 @@
 
 /* Font preview */
 .font-preview {
-  font-size: 16px;
-  padding: 15px;
-  background-color: var(--white);
+  background-color: var(--header-bg);
   border-radius: 4px;
-  min-height: 100px;
   display: flex;
   align-items: center;
-  justify-content: center;
-  text-align: center;
-  font-size: inherit;
-  line-height: inherit;
+  justify-content: left;
+  text-align: left;
+  min-height: auto;
+  box-sizing: border-box;
+  font-size: 14px !important;
+  line-height: 1.5 !important;
   word-break: break-word;
 }
-
-/* Add these styles to your tabs/font/font.css file */
 
 .css-snippet-container {
   width: 100%;
@@ -95,21 +92,21 @@
 .css-code {
   background-color: #f5f5f5;
   border-radius: 4px;
-  padding: 10px;
+  padding: 24px;
   font-family: monospace;
   font-size: 12px;
   white-space: pre-wrap;
   margin: 0;
   max-height: 150px;
   overflow-y: auto;
-  border: 1px solid #ddd;
+  border: 1px solid var(--border-color);
   color: #333;
 }
 
 .copy-snippet-btn {
   position: absolute;
-  top: 5px;
-  right: 5px;
+  top: 16px;
+  right: 20px;
   background-color: var(--primary-color);
   color: white;
   border: none;
@@ -143,15 +140,37 @@
   color: white;
 }
 
-/* Instruction message */
-.instruction-message {
+/* Row for instruction and button */
+.instruction-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
   background-color: var(--header-bg);
   border: 1px solid var(--border-color);
   color: var(--heading);
   padding: 12px 16px;
   border-radius: 6px;
   font-size: 14px;
-  text-align: left;
+}
+
+.instruction-row p {
+  margin: 0;
+}
+
+.element-picker-button {
+  padding: 8px 10px;
+  background-color: var(--primary-color);
+  color: var(--white);
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: background-color 0.3s;
+  white-space: nowrap;
+}
+
+.element-picker-button:hover {
+  background-color: var(--secondary-color);
 }
 
 /* Body properties styles */
@@ -188,36 +207,127 @@
   color: var(--body);
 }
 
-.font-preview {
-  background-color: var(--header-bg);
-  padding: 12px 12px 12px 0px;
-  min-height: 50px;
-  font-size: 14px !important;
-  line-height: 1.5 !important;
-  display: flex;
-  align-items: start;
-  justify-content: left;
-  text-align: left;
-}
+/* Color swatch styles for font tab */
 
 /* Color swatch styles for font tab */
 .font-color-preview {
   display: flex;
   align-items: center;
+  gap: 6px;
   margin-left: 12px;
-  cursor: pointer;
+  position: relative;
 }
 
+/* Format dropdown styles */
+.color-format-dropdown {
+  position: relative;
+  cursor: pointer;
+  display: none; /* Hide by default */
+}
+
+.dropdown-button {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px;
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  background-color: var(--white);
+  font-size: 12px;
+  transition: all 0.2s;
+}
+
+.dropdown-button:hover {
+  background-color: var(--primary-color);
+  color: white;
+}
+
+.dropdown-arrow {
+  transition: transform 0.2s;
+}
+
+.dropdown-menu {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  z-index: 10;
+  background-color: white;
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  display: none;
+  width: 100%;
+  margin-top: 4px;
+}
+
+.dropdown-menu.show {
+  display: block;
+  animation: fadeIn 0.2s ease-out;
+}
+
+.dropdown-item {
+  padding: 6px 10px;
+  font-size: 12px;
+  transition: all 0.2s;
+}
+
+.dropdown-item:hover {
+  background-color: var(--primary-color);
+  color: white;
+}
+
+/* Color code display */
+.color-code {
+  font-size: 12px;
+  padding: 4px;
+  background-color: var(--white);
+  border-radius: 4px;
+  border: 1px solid var(--border-color);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100px;
+  display: none;
+}
+
+/* Color swatch */
 .color-swatch {
-  width: 18px;
-  height: 18px;
+  width: 20px;
+  height: 20px;
   border-radius: 4px;
   border: 1px solid var(--border-color);
   transition: transform 0.2s ease;
+  flex-shrink: 0;
+  display: none;
+  cursor: default;
 }
 
-.color-swatch:hover {
-  transform: scale(1.2);
+/* Copy button */
+.copy-color-button {
+  cursor: pointer;
+  padding: 3px;
+  border-radius: 4px;
+  transition: transform 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  display: none;
+}
+
+.copy-color-button:hover {
+  transform: scale(1.1);
+}
+
+/* Animation for dropdown */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 /* Toast notification styles for font tab */
