@@ -1,44 +1,42 @@
-// Cleaned popup.js with added support for animated/delayed color updates
 document.addEventListener('DOMContentLoaded', function () {
   console.log('DOM loaded, checking for pending selection...')
 
-  // PRE-EMPTIVELY check chrome.storage for pending element selection FIRST
+  // Helper function to activate a specific tab
+  function activateSpecificTab(tabId) {
+    // Reset ALL tab states first
+    document.querySelectorAll('.tab-content').forEach((content) => {
+      content.classList.remove('active')
+    })
+
+    document.querySelectorAll('.nav-item').forEach((item) => {
+      item.classList.remove('active')
+    })
+
+    // Then activate just the specified tab
+    const tabContent = document.getElementById(`${tabId}-tab`)
+    const navItem = document.querySelector(`.nav-item[data-tab="${tabId}"]`)
+
+    if (tabContent) tabContent.classList.add('active')
+    if (navItem) navItem.classList.add('active')
+
+    console.log(`Tab ${tabId} activated`)
+  }
+
+  // The most direct approach - check for element selection and activate the appropriate tab
   chrome.storage.local.get(['pendingElementSelection'], function (result) {
-    console.log('Pre-emptive check for pendingElementSelection:', result)
-    const pendingSelection = result.pendingElementSelection === true
+    if (result.pendingElementSelection === true) {
+      console.log('Element selection detected - activating font tab')
 
-    if (pendingSelection) {
-      console.log('PRE-EMPTIVELY modifying DOM for font tab')
-
-      // Clear the flag immediately
+      // Clear this flag immediately
       chrome.storage.local.remove(['pendingElementSelection'])
 
-      // Direct DOM modifications before any other code runs
-      // Hide overview tab immediately
-      let overviewTab = document.getElementById('overview-tab')
-      if (overviewTab) {
-        overviewTab.classList.remove('active')
-      }
+      // Activate the font tab directly
+      activateSpecificTab('font')
+    } else {
+      console.log('No element selection - activating overview tab')
 
-      // Hide overview nav item
-      let overviewNavItem = document.querySelector(
-        '.nav-item[data-tab="overview"]'
-      )
-      if (overviewNavItem) {
-        overviewNavItem.classList.remove('active')
-      }
-
-      // Show font tab immediately
-      let fontTabElement = document.getElementById('font-tab')
-      if (fontTabElement) {
-        fontTabElement.classList.add('active')
-      }
-
-      // Show font nav item
-      let fontNavItem = document.querySelector('.nav-item[data-tab="font"]')
-      if (fontNavItem) {
-        fontNavItem.classList.add('active')
-      }
+      // Always activate overview tab by default
+      activateSpecificTab('overview')
     }
 
     // Now continue with regular initialization
@@ -63,29 +61,12 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // New helper function to activate the font tab
     function activateFontTab() {
-      // Get references to font tab elements
-      const fontTabElement = document.getElementById('font-tab')
-      const fontNavItem = document.querySelector('.nav-item[data-tab="font"]')
+      // Use our centralized tab activation function
+      activateSpecificTab('font')
 
-      if (fontTabElement && fontNavItem) {
-        // Remove active class from all navItems
-        document.querySelectorAll('.nav-item').forEach((item) => {
-          item.classList.remove('active')
-        })
-
-        // Remove active class from all tab contents
-        document.querySelectorAll('.tab-content').forEach((content) => {
-          content.classList.remove('active')
-        })
-
-        // Make font tab active
-        fontNavItem.classList.add('active')
-        fontTabElement.classList.add('active')
-
-        // Initialize font tab if needed
-        if (!fontTab && typeof FontTab !== 'undefined') {
-          fontTab = new FontTab()
-        }
+      // Initialize font tab if needed
+      if (!fontTab && typeof FontTab !== 'undefined') {
+        fontTab = new FontTab()
       }
     }
 
@@ -300,6 +281,9 @@ document.addEventListener('DOMContentLoaded', function () {
         targetTabElement.classList.add('active')
 
         console.log(`Switched to ${tabId} tab`)
+
+        // ADD THIS LINE: Clear any "pendingElementSelection" flag when user manually switches tabs
+        chrome.storage.local.remove(['pendingElementSelection'])
 
         // Initialize tab controllers if needed
         try {

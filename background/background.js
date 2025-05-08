@@ -360,9 +360,11 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     safelyStoreData('selectedElementColorData', request.colorData)
     safelyStoreData('lastSelectionTimestamp', Date.now())
 
-    // Set flag in chrome.storage.local instead of localStorage
+    // EXPLICITLY set the pendingElementSelection flag to ensure font tab opens
     chrome.storage.local.set({ pendingElementSelection: true }, function () {
-      console.log('Set pending element selection flag in chrome.storage')
+      console.log(
+        'EXPLICITLY set pendingElementSelection flag for element selection'
+      )
     })
 
     try {
