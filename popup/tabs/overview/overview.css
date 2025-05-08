@@ -151,4 +151,10 @@
 p.description-font-tab.instruction-message.overview {
   margin-bottom: 12px;
   margin-top: 12px;
+  background-color: var(--white);
+  border: 1px solid var(--border-color);
+  color: var(--heading);
+  padding: 12px 16px;
+  border-radius: 6px;
+  font-size: 14px;
 }

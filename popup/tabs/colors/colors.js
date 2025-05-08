@@ -121,10 +121,11 @@ class ColorsTab {
       overlay = document.createElement('div')
       overlay.id = 'color-scan-overlay'
       overlay.style.position = 'absolute'
-      overlay.style.top = '0'
+      overlay.style.top = '54px'
       overlay.style.left = '0'
+      overlay.style.borderRadius = '8px'
       overlay.style.width = '100%'
-      overlay.style.height = '100%'
+      overlay.style.height = 'calc(100% - 54px)'
       overlay.style.backgroundColor = 'rgba(255, 255, 255, 0.9)'
       overlay.style.display = 'flex'
       overlay.style.flexDirection = 'column'
@@ -395,17 +396,53 @@ class ColorsTab {
         path.setAttribute('stroke', '#fff')
         path.setAttribute('stroke-width', '0.5')
 
-        // Add title for tooltip
+        /*         // Add title for tooltip
         const title = document.createElementNS(
           'http://www.w3.org/2000/svg',
           'title'
         )
         title.textContent = this.formatColor(color)
-        path.appendChild(title)
+        path.appendChild(title) */
 
         // Add click event to copy color code
         path.addEventListener('click', () => {
           this.copyToClipboard(this.formatColor(color))
+        })
+
+        // Add mouseenter/mouseleave for instant tooltip
+        path.addEventListener('mouseenter', (e) => {
+          // Get or create tooltip element
+          let tooltip = document.getElementById('instant-color-tooltip')
+          if (!tooltip) {
+            tooltip = document.createElement('div')
+            tooltip.id = 'instant-color-tooltip'
+            tooltip.style.position = 'fixed'
+            tooltip.style.backgroundColor = 'rgb(0, 0, 0)'
+            tooltip.style.color = 'white'
+            tooltip.style.padding = '4px 8px'
+            tooltip.style.borderRadius = '4px'
+            tooltip.style.fontSize = '12px'
+            tooltip.style.zIndex = '9999'
+            tooltip.style.pointerEvents = 'none'
+            tooltip.style.fontFamily = 'Regola-Regular, sans-serif'
+            document.body.appendChild(tooltip)
+          }
+
+          // Position near cursor
+          const rect = svg.getBoundingClientRect()
+          tooltip.style.left = e.clientX + 10 + 'px'
+          tooltip.style.top = e.clientY + 10 + 'px'
+
+          // Show tooltip with color
+          tooltip.textContent = this.formatColor(color)
+          tooltip.style.display = 'block'
+        })
+
+        path.addEventListener('mouseleave', () => {
+          const tooltip = document.getElementById('instant-color-tooltip')
+          if (tooltip) {
+            tooltip.style.display = 'none'
+          }
         })
 
         svg.appendChild(path)

@@ -62,7 +62,11 @@
   display: flex;
   flex-wrap: wrap;
   gap: 10px;
-  margin-bottom: 20px;
+  margin-bottom: 30px;
+}
+
+#border-colors.color-list {
+  margin-bottom: 0px !important;
 }
 
 .color-item {
@@ -279,7 +283,7 @@
 /* Style for the explanation text */
 .color-wheel-hint {
   text-align: center;
-  font-size: 12px;
+  font-size: 14px;
   color: #666;
   margin: 10px 0 5px;
 }

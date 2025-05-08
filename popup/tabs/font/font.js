@@ -158,8 +158,8 @@ class FontTab {
     // Clear color swatch
     if (this.textColorSwatch) {
       this.textColorSwatch.style.backgroundColor = ''
-      this.textColorSwatch.title = 'Tekstkleur'
       this.textColorSwatch.dataset.color = ''
+      this.textColorSwatch.removeAttribute('title') // Add this line
       this.textColorSwatch.style.display = 'none' // Hide when no data
     }
 
@@ -549,7 +549,6 @@ class FontTab {
     if (!colorData || !colorData.text) {
       if (this.textColorSwatch) {
         this.textColorSwatch.style.backgroundColor = ''
-        this.textColorSwatch.title = 'Tekstkleur'
         this.textColorSwatch.dataset.color = ''
         this.textColorSwatch.style.display = 'none' // Hide the swatch when no data
 
@@ -649,9 +648,9 @@ class FontTab {
       this.colorCodeDisplay.style.display = colorValue ? 'block' : 'none'
     }
 
-    // Update color swatch (without clickable title hint)
+    // Update dataset color and REMOVE the title attribute
     this.textColorSwatch.dataset.color = colorValue
-    this.textColorSwatch.title = colorValue ? colorValue : 'Tekstkleur'
+    this.textColorSwatch.removeAttribute('title') // Add this line to explicitly remove the title
   }
 
   showFormatChangeNotification(format) {
@@ -735,7 +734,6 @@ class FontTab {
     // In the clearAllFontValues method, update the color swatch part to:
     if (this.textColorSwatch) {
       this.textColorSwatch.style.backgroundColor = ''
-      this.textColorSwatch.title = 'Tekstkleur'
       this.textColorSwatch.dataset.color = ''
       this.textColorSwatch.style.display = 'none' // Hide by default
     }
