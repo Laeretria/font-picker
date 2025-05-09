@@ -219,22 +219,29 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
       }
     })
 
-    // If we have recently selected data, send it to the popup
-    if (
-      lastSelectedData &&
-      lastSelectedData.fontData &&
-      lastSelectedData.colorData &&
-      Date.now() - lastSelectedData.timestamp < 30000
-    ) {
-      // Send the data back to the popup that just opened
-      setTimeout(() => {
-        chrome.runtime.sendMessage({
-          action: 'loadSelectedElement',
-          fontData: lastSelectedData.fontData,
-          colorData: lastSelectedData.colorData,
-        })
-      }, 200) // Short delay to ensure popup is fully initialized
-    }
+    // Check if we should send element data AND switch to font tab
+    chrome.storage.local.get(['pendingElementSelection'], function (result) {
+      // If we have recently selected data, ALWAYS send it to the popup
+      if (
+        lastSelectedData &&
+        lastSelectedData.fontData &&
+        lastSelectedData.colorData &&
+        Date.now() - lastSelectedData.timestamp < 30000
+      ) {
+        // Send the data back to the popup that just opened
+        setTimeout(() => {
+          chrome.runtime.sendMessage({
+            action: result.pendingElementSelection
+              ? 'loadSelectedElement'
+              : 'updateFontData',
+            fontData: lastSelectedData.fontData,
+            colorData: lastSelectedData.colorData,
+            // Only switch to font tab if pendingElementSelection is true
+            switchToFontTab: result.pendingElementSelection === true,
+          })
+        }, 200) // Short delay to ensure popup is fully initialized
+      }
+    })
 
     sendResponse({ status: 'ok' })
     return true
