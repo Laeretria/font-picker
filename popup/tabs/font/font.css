@@ -237,11 +237,6 @@
   transition: all 0.2s;
 }
 
-.dropdown-button:hover {
-  background-color: var(--primary-color);
-  color: white;
-}
-
 .dropdown-arrow {
   transition: transform 0.2s;
 }
@@ -279,15 +274,15 @@
 /* Color code display */
 .color-code {
   font-size: 12px;
-  padding: 4px;
+  padding: 4px 8px;
   background-color: var(--white);
   border-radius: 4px;
   border: 1px solid var(--border-color);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  max-width: 100px;
-  display: none;
+  width: fit-content; /* Adjust width to content */
+  min-width: 30px; /* Minimum width */
+  display: none; /* Keep this for empty state! */
+  white-space: nowrap; /* For shorter codes like HEX */
+  overflow: visible;
 }
 
 /* Color swatch */
@@ -382,4 +377,35 @@
   font-size: 13px;
   white-space: nowrap;
   font-family: 'Regola-Regular';
+}
+
+/* Add to font.css */
+.element-picker-button {
+  display: flex;
+  align-items: center;
+  padding: 8px 10px;
+  background-color: var(--primary-color);
+  color: var(--white);
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: background-color 0.3s;
+  white-space: nowrap;
+}
+
+.element-picker-button:hover {
+  background-color: var(--secondary-color);
+}
+
+.element-picker-button .button-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 8px;
+}
+
+.element-picker-button .button-text {
+  font-family: 'Regola-Medium';
+  font-size: 12px;
 }

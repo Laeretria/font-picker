@@ -8,7 +8,7 @@
   "action": {
     "default_popup": "popup/popup.html",
     "default_icon": {
-      "128": "assets/icons/tool-icon.png"
+      "128": "assets/icons/favicon128.png"
     }
   },
   "content_scripts": [

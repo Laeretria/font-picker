@@ -83,8 +83,6 @@
 .heading-card.ultra-compact .properties-grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: 6px;
-  margin-bottom: 6px;
 }
 
 .heading-card.ultra-compact .property {
