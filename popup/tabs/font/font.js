@@ -155,6 +155,16 @@ class FontTab {
     if (this.cssSnippetElement) this.cssSnippetElement.textContent = ''
     console.log('Cleared CSS snippet')
 
+    // Disable copy button when no data
+    if (this.copySnippetButton) {
+      this.copySnippetButton.disabled = !this.cssSnippetElement.textContent
+      if (!this.cssSnippetElement.textContent) {
+        this.copySnippetButton.classList.add('disabled')
+      } else {
+        this.copySnippetButton.classList.remove('disabled')
+      }
+    }
+
     // Clear color swatch
     if (this.textColorSwatch) {
       this.textColorSwatch.style.backgroundColor = ''
@@ -917,10 +927,23 @@ class FontTab {
 
     const fontData = this.currentFontData.body
 
-    // If no font family, display empty snippet
+    // If no font family, display empty snippet and disable copy button
     if (!fontData || !fontData.family) {
       this.cssSnippetElement.textContent = ''
+
+      // Disable the copy button
+      if (this.copySnippetButton) {
+        this.copySnippetButton.disabled = true
+        this.copySnippetButton.classList.add('disabled')
+      }
+
       return
+    }
+
+    // Enable the copy button
+    if (this.copySnippetButton) {
+      this.copySnippetButton.disabled = false
+      this.copySnippetButton.classList.remove('disabled')
     }
 
     let cssSnippet = ''

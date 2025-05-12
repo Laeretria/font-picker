@@ -409,3 +409,9 @@
   font-family: 'Regola-Medium';
   font-size: 12px;
 }
+/* Add styles for disabled copy button */
+.copy-snippet-btn.disabled {
+  background-color: var(--primary-color);
+  cursor: not-allowed;
+  opacity: 0.5;
+}
