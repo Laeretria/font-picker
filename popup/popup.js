@@ -407,17 +407,7 @@ document.addEventListener('DOMContentLoaded', function () {
         if (document.getElementById('line-height')) {
           document.getElementById('line-height').textContent = ''
         }
-        if (document.getElementById('font-preview')) {
-          document.getElementById('font-preview').textContent = ''
-          const preview = document.getElementById('font-preview')
-          if (preview) {
-            preview.style.fontFamily = ''
-            preview.style.fontSize = ''
-            preview.style.fontStyle = ''
-            preview.style.fontWeight = ''
-            preview.style.lineHeight = ''
-          }
-        }
+
         if (document.getElementById('css-snippet')) {
           document.getElementById('css-snippet').textContent = ''
         }

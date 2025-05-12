@@ -7,7 +7,6 @@ class FontTab {
     this.fontWeightElement = document.getElementById('font-weight')
     this.fontSizeElement = document.getElementById('font-size')
     this.lineHeightElement = document.getElementById('line-height')
-    this.fontPreviewElement = document.getElementById('font-preview')
     this.cssSnippetElement = document.getElementById('css-snippet')
     this.copySnippetButton = document.getElementById('copy-snippet-btn')
     this.textColorSwatch = document.getElementById('text-color-swatch')
@@ -139,17 +138,6 @@ class FontTab {
     if (this.fontSizeElement) this.fontSizeElement.textContent = ''
     if (this.lineHeightElement) this.lineHeightElement.textContent = ''
     console.log('Cleared font style element')
-
-    // Clear font preview - important to empty the text, not just styles
-    if (this.fontPreviewElement) {
-      this.fontPreviewElement.textContent = ''
-      this.fontPreviewElement.style.fontFamily = ''
-      this.fontPreviewElement.style.fontSize = ''
-      this.fontPreviewElement.style.fontStyle = ''
-      this.fontPreviewElement.style.fontWeight = 'normal'
-      this.fontPreviewElement.style.lineHeight = ''
-    }
-    console.log('Cleared font preview')
 
     // Clear CSS snippet
     if (this.cssSnippetElement) this.cssSnippetElement.textContent = ''
@@ -598,9 +586,6 @@ class FontTab {
     this.fontSizeElement.textContent = fontData.body.size || ''
     this.lineHeightElement.textContent = fontData.body.lineHeight || ''
 
-    // Update font preview
-    this.updateFontPreview(fontData.body)
-
     // Update CSS snippet
     this.updateCSSSnippet()
   }
@@ -824,28 +809,6 @@ class FontTab {
     return numericMatch ? numericMatch[0] + 'px' : lineHeight
   }
 
-  updateFontPreview(fontData) {
-    if (!fontData || !fontData.family) {
-      // If no font data, clear the preview
-      this.fontPreviewElement.textContent = ''
-      this.fontPreviewElement.style.fontFamily = ''
-      this.fontPreviewElement.style.fontSize = ''
-      this.fontPreviewElement.style.fontStyle = ''
-      this.fontPreviewElement.style.fontWeight = ''
-      this.fontPreviewElement.style.lineHeight = ''
-      return
-    }
-
-    // If we have font data, set the preview text and styles
-    this.fontPreviewElement.textContent =
-      'AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxYyZz'
-    this.fontPreviewElement.style.fontFamily = fontData.family || ''
-    this.fontPreviewElement.style.fontSize = fontData.size || ''
-    this.fontPreviewElement.style.fontStyle = fontData.style || ''
-    this.fontPreviewElement.style.fontWeight = 'normal'
-    this.fontPreviewElement.style.lineHeight = fontData.lineHeight || ''
-  }
-
   // Update the updateSelectedElementFontData method to also handle color data
   updateSelectedElementFontData(fontData, colorData) {
     // If no font data passed, clear everything and return
@@ -905,9 +868,6 @@ class FontTab {
     if (this.lineHeightElement) {
       this.lineHeightElement.textContent = lineHeight || ''
     }
-
-    // Update font preview
-    this.updateFontPreview(fontData)
 
     // Update CSS snippet
     this.updateCSSSnippet()
