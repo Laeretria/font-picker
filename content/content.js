@@ -897,14 +897,14 @@ async function autoScrollPageForColorAnalysis() {
   indicator.style.position = 'fixed'
   indicator.style.right = '20px'
   indicator.style.bottom = '20px'
-  indicator.style.backgroundColor = 'rgba(20, 72, 255, 0.8)'
+  indicator.style.backgroundColor = '#1448FF'
   indicator.style.color = 'white'
   indicator.style.padding = '8px 12px'
   indicator.style.borderRadius = '4px'
   indicator.style.zIndex = '999999'
   indicator.style.fontFamily = 'Arial, sans-serif'
   indicator.style.fontSize = '14px'
-  indicator.textContent = 'Scanning colors...'
+  indicator.textContent = 'Kleuren scannen...'
   document.body.appendChild(indicator)
 
   try {
@@ -921,7 +921,7 @@ async function autoScrollPageForColorAnalysis() {
         action: 'colorScanProgress',
         progress: Math.min(roundedPercent, 100),
       })
-      indicator.textContent = `Scanning colors: ${Math.min(
+      indicator.textContent = `Kleuren scannen: ${Math.min(
         roundedPercent,
         100
       )}%`
