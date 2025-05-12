@@ -134,16 +134,17 @@ function toggleElementPicker() {
     // Add a visual indicator that the picker is active
     const indicatorDiv = document.createElement('div')
     indicatorDiv.id = 'element-picker-indicator'
-    indicatorDiv.textContent = 'Element Picker Active (ESC to cancel)'
+    indicatorDiv.textContent =
+      'Selecteer element is actief (ESC om te annuleren)'
     indicatorDiv.style.position = 'fixed'
     indicatorDiv.style.top = '10px'
     indicatorDiv.style.right = '10px'
-    indicatorDiv.style.backgroundColor = 'rgba(0, 123, 255, 0.9)'
+    indicatorDiv.style.backgroundColor = '#1448FF'
     indicatorDiv.style.color = 'white'
     indicatorDiv.style.padding = '5px 10px'
     indicatorDiv.style.borderRadius = '4px'
     indicatorDiv.style.zIndex = '9999999'
-    indicatorDiv.style.fontSize = '12px'
+    indicatorDiv.style.fontSize = '14px'
     indicatorDiv.style.fontFamily = 'Arial, sans-serif'
     document.body.appendChild(indicatorDiv)
   } else {

@@ -181,7 +181,7 @@ class ColorsTab {
       const progressText = document.createElement('p')
       progressText.className = 'progress-text'
       // Format without decimal places, just whole numbers
-      progressText.textContent = `${Math.round(progress)}% complete`
+      progressText.textContent = `${Math.round(progress)}% compleet`
       progressText.style.marginTop = '8px'
       progressText.style.fontSize = '14px'
 
@@ -203,7 +203,7 @@ class ColorsTab {
 
       if (progressText) {
         // Format without decimal places, just whole numbers
-        progressText.textContent = `${Math.round(progress)}% complete`
+        progressText.textContent = `${Math.round(progress)}% compleet`
       }
     }
   }
