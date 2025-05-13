@@ -395,6 +395,7 @@ function selectElement(e) {
     weight: computedStyle.fontWeight,
     size: computedStyle.fontSize,
     lineHeight: lineHeight,
+    letterSpacing: formatLetterSpacing(element, computedStyle.letterSpacing),
     element: element.tagName.toLowerCase(),
     text:
       element.textContent.slice(0, 20) +
@@ -482,6 +483,57 @@ function formatLineHeight(lineHeight) {
   // If no decimal or cannot parse, just return the numeric part with px
   const numericMatch = lineHeight.match(/\d+/)
   return numericMatch ? numericMatch[0] + 'px' : lineHeight
+}
+
+// Helper function to format letter-spacing with precision
+function formatLetterSpacing(element, letterSpacing) {
+  if (!letterSpacing) return ''
+
+  // If "normal", return 0px
+  if (letterSpacing === 'normal') return '0px'
+
+  // For em values, convert based on the element's font size
+  if (letterSpacing.includes('em')) {
+    const emMatch = letterSpacing.match(/([-]?\d+(\.\d+)?)em/)
+    if (emMatch) {
+      const emValue = parseFloat(emMatch[1])
+
+      // Get the computed font size of the element in pixels
+      const computedStyle = window.getComputedStyle(element)
+      const fontSizeStr = computedStyle.fontSize
+      const fontSizeMatch = fontSizeStr.match(/(\d+(\.\d+)?)px/)
+      const fontSize = fontSizeMatch ? parseFloat(fontSizeMatch[1]) : 16
+
+      // Calculate pixel value from em - keep decimal precision
+      const pxValue = emValue * fontSize
+
+      // Format to 1 decimal place for display
+      return pxValue.toFixed(1) + 'px'
+    }
+  }
+
+  // Handle regular px values without rounding
+  if (letterSpacing.includes('px')) {
+    const pxMatch = letterSpacing.match(/([-]?\d+(\.\d+)?)px/)
+    if (pxMatch) {
+      const pxValue = parseFloat(pxMatch[1])
+
+      // Format to 1 decimal place for display
+      return pxValue.toFixed(1) + 'px'
+    }
+  }
+
+  // If it's a number without units, assume px
+  const numberMatch = letterSpacing.match(/([-]?\d+(\.\d+)?)/)
+  if (numberMatch) {
+    const value = parseFloat(numberMatch[1])
+
+    // Format to 1 decimal place
+    return value.toFixed(1) + 'px'
+  }
+
+  // If all else fails, return the original
+  return letterSpacing
 }
 
 // Detect the actual font being used

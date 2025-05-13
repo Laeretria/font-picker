@@ -165,10 +165,25 @@
   padding-top: 15px;
 }
 
+/* Update the existing property-boxes styles */
 .property-boxes {
   display: grid;
-  grid-template-columns: 1fr 1fr;
   gap: 10px;
+  margin-bottom: 10px; /* Add space between rows */
+}
+
+/* Add these new specific styles */
+.property-boxes.style-weight-row {
+  grid-template-columns: 1fr 1fr;
+}
+
+.property-boxes.sizes-row {
+  grid-template-columns: 1fr 1fr 1fr;
+}
+
+/* Remove the bottom margin from the last property-boxes */
+.property-boxes:last-child {
+  margin-bottom: 0;
 }
 
 .property-item {

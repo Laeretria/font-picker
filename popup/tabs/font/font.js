@@ -17,6 +17,7 @@ class FontTab {
     this.currentFormatDisplay = document.getElementById('current-format')
     this.colorCodeDisplay = document.getElementById('color-code')
     this.copyColorButton = document.querySelector('.copy-color-button')
+    this.letterSpacingElement = document.getElementById('letter-spacing')
 
     // Track current font data - initialize with empty values
     this.currentFontData = {
@@ -152,6 +153,8 @@ class FontTab {
         this.copySnippetButton.classList.remove('disabled')
       }
     }
+
+    if (this.letterSpacingElement) this.letterSpacingElement.textContent = ''
 
     // Clear color swatch
     if (this.textColorSwatch) {
@@ -850,6 +853,11 @@ class FontTab {
       }
     }
 
+    // Add this with the other property updates
+    if (this.letterSpacingElement) {
+      this.letterSpacingElement.textContent = fontData.letterSpacing || ''
+    }
+
     // Update body font name
     if (this.bodyFontElement) {
       this.bodyFontElement.textContent = fontData.family || ''
@@ -930,17 +938,41 @@ class FontTab {
       case 'element':
         // Element-specific selector
         const element = fontData.element || 'p'
-        cssSnippet = `${element} {\n  font-family: "${fontData.family}", sans-serif;\n  font-size: ${fontData.size};\n  font-weight: ${fontData.weight};\n  font-style: ${fontData.style};\n  line-height: ${lineHeight};\n}`
+        cssSnippet = `${element} {\n  font-family: "${
+          fontData.family
+        }", sans-serif;\n  font-size: ${fontData.size};\n  font-weight: ${
+          fontData.weight
+        };\n  font-style: ${
+          fontData.style
+        };\n  line-height: ${lineHeight};\n} letter-spacing: ${
+          fontData.letterSpacing || '0px'
+        };`
         break
 
       case 'class':
         // Class-based selector
-        cssSnippet = `.font-style {\n  font-family: "${fontData.family}", sans-serif;\n  font-size: ${fontData.size};\n  font-weight: ${fontData.weight};\n  font-style: ${fontData.style};\n  line-height: ${lineHeight};\n}`
+        cssSnippet = `.font-style {\n  font-family: "${
+          fontData.family
+        }", sans-serif;\n  font-size: ${fontData.size};\n  font-weight: ${
+          fontData.weight
+        };\n  font-style: ${
+          fontData.style
+        };\n  line-height: ${lineHeight};\n} letter-spacing: ${
+          fontData.letterSpacing || '0px'
+        }; `
         break
 
       case 'variable':
         // CSS variables
-        cssSnippet = `:root {\n  --font-family: "${fontData.family}", sans-serif;\n  --font-size: ${fontData.size};\n  --font-weight: ${fontData.weight};\n  --font-style: ${fontData.style};\n  --line-height: ${lineHeight};\n}\n\n/* Usage example */\nbody {\n  font-family: var(--font-family);\n  font-size: var(--font-size);\n  font-weight: var(--font-weight);\n  font-style: var(--font-style);\n  line-height: var(--line-height);\n}`
+        cssSnippet = `:root {\n  --font-family: "${
+          fontData.family
+        }", sans-serif;\n  --font-size: ${fontData.size};\n  --font-weight: ${
+          fontData.weight
+        };\n  --font-style: ${
+          fontData.style
+        };\n  --line-height: ${lineHeight};\n  --letter-spacing: ${
+          fontData.letterSpacing || '0px'
+        };}\n\n/* Usage example */\nbody {\n  font-family: var(--font-family);\n  font-size: var(--font-size);\n  font-weight: var(--font-weight);\n  font-style: var(--font-style);\n  line-height: var(--line-height);\n  letter-spacing: var(--letter-spacing);}`
         break
     }
 

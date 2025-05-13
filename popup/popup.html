@@ -282,8 +282,10 @@
               </div>
 
               <!-- Nested property boxes -->
+              <!-- Replace the current property-boxes div with this structure -->
               <div class="body-properties">
-                <div class="property-boxes">
+                <!-- First row: 2 columns -->
+                <div class="property-boxes style-weight-row">
                   <div class="property-item">
                     <div class="property-label">Stijl</div>
                     <div class="property-value" id="font-style"></div>
@@ -292,6 +294,10 @@
                     <div class="property-label">Gewicht</div>
                     <div class="property-value" id="font-weight"></div>
                   </div>
+                </div>
+
+                <!-- Second row: 3 columns -->
+                <div class="property-boxes sizes-row">
                   <div class="property-item">
                     <div class="property-label">Grootte</div>
                     <div class="property-value" id="font-size"></div>
@@ -299,6 +305,10 @@
                   <div class="property-item">
                     <div class="property-label">Lijnhoogte</div>
                     <div class="property-value" id="line-height"></div>
+                  </div>
+                  <div class="property-item">
+                    <div class="property-label">Letterruimte</div>
+                    <div class="property-value" id="letter-spacing"></div>
                   </div>
                 </div>
               </div>
