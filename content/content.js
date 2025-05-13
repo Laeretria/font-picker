@@ -193,6 +193,10 @@ async function analyzeHeadings() {
         weight: computedStyle.fontWeight,
         size: computedStyle.fontSize,
         lineHeight: lineHeight,
+        letterSpacing: formatLetterSpacing(
+          element,
+          computedStyle.letterSpacing
+        ),
         text:
           element.textContent.trim().slice(0, 50) +
           (element.textContent.trim().length > 50 ? '...' : ''),
@@ -691,6 +695,10 @@ async function analyzeBodyFont() {
             weight: computedStyle.fontWeight,
             size: computedStyle.fontSize,
             lineHeight: formatLineHeight(computedStyle.lineHeight || ''),
+            letterSpacing: formatLetterSpacing(
+              mainTextElement,
+              computedStyle.letterSpacing
+            ),
             isAccurate: true, // Flag indicating this used the accurate method
           }
         }
@@ -720,6 +728,10 @@ async function analyzeBodyFont() {
           weight: computedStyle.fontWeight,
           size: computedStyle.fontSize,
           lineHeight: formatLineHeight(computedStyle.lineHeight || ''),
+          letterSpacing: formatLetterSpacing(
+            mainTextElement,
+            computedStyle.letterSpacing
+          ),
           isAccurate: true, // Flag indicating this used the accurate method
         }
       }
@@ -737,6 +749,10 @@ async function analyzeBodyFont() {
         weight: computedStyle.fontWeight,
         size: computedStyle.fontSize,
         lineHeight: formatLineHeight(computedStyle.lineHeight || ''),
+        letterSpacing: formatLetterSpacing(
+          bodyElement,
+          computedStyle.letterSpacing
+        ),
         isAccurate: true, // Flag indicating this used the accurate method
       }
     }
@@ -751,6 +767,7 @@ async function analyzeBodyFont() {
       weight: '400',
       size: '16px',
       lineHeight: '24px',
+      letterSpacing: '0px',
       isAccurate: false,
     }
   }

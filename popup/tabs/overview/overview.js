@@ -262,6 +262,13 @@ class OverviewTab {
       )
       propertiesGrid.appendChild(lineHeightProperty)
 
+      // Add this right after:
+      const letterSpacingProperty = this.createUltraCompactProperty(
+        'Letterruimte',
+        bodyFontData.letterSpacing || 'normal'
+      )
+      propertiesGrid.appendChild(letterSpacingProperty)
+
       headingDetails.appendChild(propertiesGrid)
 
       // Assemble the card
@@ -345,6 +352,13 @@ class OverviewTab {
       headingData.lineHeight || 'normal'
     )
     propertiesGrid.appendChild(lineHeightProperty)
+
+    // Add this right after:
+    const letterSpacingProperty = this.createUltraCompactProperty(
+      'Letterruimte',
+      headingData.letterSpacing || 'normal'
+    )
+    propertiesGrid.appendChild(letterSpacingProperty)
 
     headingDetails.appendChild(propertiesGrid)
 
