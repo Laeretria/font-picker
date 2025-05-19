@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
-  "name": "Font & Color Inspector",
+  "name": "Design Scraper",
   "version": "1.0",
-  "description": "Inspect font and color properties of webpage elements",
+  "description": "Inspecteer de lettertype- en kleureigenschappen van elementen op een webpagina",
   "permissions": ["activeTab", "scripting", "storage", "tabs"],
   "host_permissions": ["<all_urls>"],
   "action": {
