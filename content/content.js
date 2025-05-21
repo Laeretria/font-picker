@@ -2,9 +2,6 @@
 let pickerActive = false
 let highlightedElement = null
 
-// Send a ready message when the content script loads
-console.log('Content script loaded on: ' + window.location.href)
-
 // Add a style element for the highlighter
 const styleElement = document.createElement('style')
 styleElement.textContent = `
@@ -26,8 +23,6 @@ document.head.appendChild(styleElement)
 
 // Set up a message listener
 chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
-  console.log('Content script received message:', request.action)
-
   // Simple ping to check if content script is running
   if (request.action === 'ping') {
     sendResponse({ status: 'ok' })
@@ -420,13 +415,6 @@ function selectElement(e) {
     timestamp: Date.now(), // Add timestamp for freshness checking
   }
 
-  console.log(
-    'Element selected:',
-    element.tagName,
-    'with font family:',
-    fontData.family
-  )
-
   // Try multiple approaches to ensure data is captured
   try {
     // SET THE FLAG before sending the message - use chrome.storage instead of localStorage
@@ -666,7 +654,6 @@ async function analyzeBodyFont() {
 
     // If no specific elements found, try a broader selection
     if (bodyElements.length === 0) {
-      console.log('No specific body elements found, checking broader selectors')
       const allParagraphs = document.querySelectorAll('p')
 
       if (allParagraphs.length > 0) {
@@ -739,7 +726,6 @@ async function analyzeBodyFont() {
 
     // If still no specific elements found, fall back to the body element
     if (!bodyFontData.isAccurate) {
-      console.log('Falling back to body element')
       const bodyElement = document.body
       const computedStyle = window.getComputedStyle(bodyElement)
 
@@ -949,8 +935,6 @@ async function performColorAnalysis() {
 
 // Smooth scrolling with minimal pause at bottom
 async function autoScrollPageForColorAnalysis() {
-  console.log('Starting smooth auto-scroll for comprehensive color analysis...')
-
   // Get total scrollable height
   const totalHeight = Math.max(
     document.body.scrollHeight,
@@ -1082,11 +1066,11 @@ async function autoScrollPageForColorAnalysis() {
     let colors = await performColorAnalysis()
 
     // Perform the smooth scrolling
-    console.log('Smoothly scrolling down and up...')
+
     await smoothScrollDownAndUp()
 
     // Final scan at top
-    console.log('Performing final color scan...')
+
     const finalColors = await performColorAnalysis()
 
     // Remove the indicator
@@ -1099,7 +1083,6 @@ async function autoScrollPageForColorAnalysis() {
       progress: 100,
     })
 
-    console.log('Smooth auto-scroll color analysis complete')
     return finalColors
   } catch (error) {
     console.error('Error during auto-scroll:', error)

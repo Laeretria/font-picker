@@ -1,6 +1,4 @@
 document.addEventListener('DOMContentLoaded', function () {
-  console.log('DOM loaded, checking for pending selection...')
-
   // Add variable to LOCK tab switching completely after initialization
   let initializing = true
   let tabLocked = false
@@ -9,7 +7,6 @@ document.addEventListener('DOMContentLoaded', function () {
   // Add a function to force a specific tab after a delay (prevents any flickering)
   function forceTabAfterDelay(tabId, delay) {
     setTimeout(() => {
-      console.log('FORCING TAB TO REMAIN: ' + tabId)
       activateSpecificTab(tabId)
       // Re-allow tab switching only after we've stabilized
       setTimeout(() => {
@@ -20,11 +17,8 @@ document.addEventListener('DOMContentLoaded', function () {
 
   // Helper function to activate a specific tab
   function activateSpecificTab(tabId) {
-    console.log('Activating tab: ' + tabId + ' (locked: ' + tabLocked + ')')
-
     // Don't allow tab switching if locked (unless it's our own forced switch)
     if (tabLocked && lastSelectedTab === tabId) {
-      console.log('Tab already selected, ignoring.')
       return
     }
 
@@ -46,8 +40,6 @@ document.addEventListener('DOMContentLoaded', function () {
 
     if (tabContent) tabContent.classList.add('active')
     if (navItem) navItem.classList.add('active')
-
-    console.log(`Tab ${tabId} activated`)
   }
 
   // First check for element selection
@@ -58,7 +50,6 @@ document.addEventListener('DOMContentLoaded', function () {
       let targetTab = 'overview' // Default to overview
 
       if (result.pendingElementSelection === true) {
-        console.log('Element selection detected - will activate font tab')
         // Clear this flag immediately
         chrome.storage.local.remove(['pendingElementSelection'])
         // We also want to remove the forceOverviewTab flag since we're handling element selection
@@ -66,7 +57,6 @@ document.addEventListener('DOMContentLoaded', function () {
 
         targetTab = 'font'
       } else {
-        console.log('No element selection - will activate overview tab')
         // Set flag to enforce overview tab for future openings
         chrome.storage.local.set({ forceOverviewTab: true })
       }
@@ -103,13 +93,10 @@ document.addEventListener('DOMContentLoaded', function () {
       // We'll check URL, page refresh status, AND tab changes
       checkAndClearData()
 
-      console.log('Popup initialized')
-
       // New helper function to activate the font tab
       function activateFontTab() {
         // Skip if we're still initializing or tab is locked
         if (initializing || tabLocked) {
-          console.log('Tab switch prevented - initialization in progress')
           return
         }
 
@@ -137,12 +124,6 @@ document.addEventListener('DOMContentLoaded', function () {
 
                 // IMMEDIATELY clear data if URL has changed
                 if (urlChanged) {
-                  console.log(
-                    'URL changed, clearing data:',
-                    lastUrl,
-                    ' -> ',
-                    currentUrl
-                  )
                   clearAllStorageData()
 
                   // Store new URL in chrome.storage
@@ -158,8 +139,6 @@ document.addEventListener('DOMContentLoaded', function () {
                     action: 'checkTabStatus',
                   },
                   function (tabResponse) {
-                    console.log('Tab status:', tabResponse)
-
                     // Request page information from background script
                     chrome.runtime.sendMessage(
                       {
@@ -168,8 +147,6 @@ document.addEventListener('DOMContentLoaded', function () {
                         tabId: currentTabId,
                       },
                       function (response) {
-                        console.log('Page status:', response)
-
                         // Store current URL after processing in both storage types
                         chrome.storage.local.set({ lastVisitedUrl: currentUrl })
                         localStorage.setItem('lastVisitedUrl', currentUrl)
@@ -182,7 +159,6 @@ document.addEventListener('DOMContentLoaded', function () {
                             response.pageRefreshed ||
                             !response.recentElementSelection)
                         ) {
-                          console.log('Clearing data because:', response)
                           clearAllStorageData()
                         }
                       }
@@ -214,8 +190,6 @@ document.addEventListener('DOMContentLoaded', function () {
 
       // Function to clear ALL storage locations
       function clearAllStorageData() {
-        console.log('PERFORMING COMPLETE DATA CLEAR')
-
         // 1. Clear localStorage
         localStorage.removeItem('selectedElementFontData')
         localStorage.removeItem('selectedElementColorData')
@@ -239,9 +213,7 @@ document.addEventListener('DOMContentLoaded', function () {
         // 3. Clear session storage if available
         try {
           sessionStorage.clear()
-        } catch (e) {
-          console.log('Session storage not available')
-        }
+        } catch (e) {}
 
         // 4. Tell background script to clear its data
         chrome.runtime.sendMessage({ action: 'clearStoredData' })
@@ -297,18 +269,12 @@ document.addEventListener('DOMContentLoaded', function () {
       const navItems = document.querySelectorAll('.nav-item')
       const tabContents = document.querySelectorAll('.tab-content')
 
-      console.log('Found nav items:', navItems.length)
-      console.log('Found tab contents:', tabContents.length)
-
       navItems.forEach((item) => {
         item.addEventListener('click', function () {
           // Don't allow tab switching if color scan is in progress or during initialization
           if (colorScanInProgress || initializing || tabLocked) {
-            console.log('Tab switching blocked due to initialization/lock/scan')
             return
           }
-
-          console.log('Tab clicked:', this.getAttribute('data-tab'))
 
           // Get the target tab ID
           const tabId = this.getAttribute('data-tab')
@@ -328,7 +294,6 @@ document.addEventListener('DOMContentLoaded', function () {
           // Initialize tab controllers if needed
           try {
             if (tabId === 'font' && !fontTab) {
-              console.log('Initializing FontTab')
               if (typeof FontTab !== 'undefined') {
                 // Pre-clear all font values in the UI
                 clearAllFontUI()
@@ -338,7 +303,6 @@ document.addEventListener('DOMContentLoaded', function () {
               }
             }
             if (tabId === 'colors' && !colorsTab) {
-              console.log('Initializing ColorsTab')
               if (typeof ColorsTab !== 'undefined') {
                 // Check if we've already completed a full scan for this URL
                 const currentUrl = localStorage.getItem('lastVisitedUrl')
@@ -376,7 +340,6 @@ document.addEventListener('DOMContentLoaded', function () {
                 console.error('ColorsTab class is not defined!')
               }
             } else if (tabId === 'overview' && !overviewTab) {
-              console.log('Initializing OverviewTab')
               if (typeof OverviewTab !== 'undefined') {
                 overviewTab = new OverviewTab()
               } else {
@@ -501,11 +464,9 @@ document.addEventListener('DOMContentLoaded', function () {
           const activeNavItem = document.querySelector('.nav-item.active')
           if (activeNavItem) {
             const activeTabId = activeNavItem.getAttribute('data-tab')
-            console.log('Loading data for active tab:', activeTabId)
+
             try {
               if (activeTabId === 'font') {
-                console.log('Initializing FontTab on popup open')
-
                 // Pre-clear all font UI elements
                 clearAllFontUI()
 
@@ -516,7 +477,6 @@ document.addEventListener('DOMContentLoaded', function () {
                   console.error('FontTab class is not defined!')
                 }
               } else if (activeTabId === 'colors') {
-                console.log('Initializing ColorsTab on popup open')
                 if (typeof ColorsTab !== 'undefined') {
                   // Check if we've already completed a full scan for this URL
                   const currentUrl = localStorage.getItem('lastVisitedUrl')
@@ -555,7 +515,6 @@ document.addEventListener('DOMContentLoaded', function () {
                   console.error('ColorsTab class is not defined!')
                 }
               } else if (activeTabId === 'overview') {
-                console.log('Initializing OverviewTab on popup open')
                 if (typeof OverviewTab !== 'undefined') {
                   // Always create a new instance to get fresh data
                   overviewTab = new OverviewTab()
@@ -583,8 +542,6 @@ document.addEventListener('DOMContentLoaded', function () {
       ) {
         // Replace the entire elementSelected handler with this code
         if (request.action === 'elementSelected') {
-          console.log('Element selected message received:', request)
-
           // Reset picker status and button text
           pickerActive = false
           if (elementPickerBtn) {
@@ -618,11 +575,7 @@ document.addEventListener('DOMContentLoaded', function () {
           // Use chrome.storage.local instead of localStorage
           chrome.storage.local.set(
             { pendingElementSelection: true },
-            function () {
-              console.log(
-                'Set pending element selection flag in chrome.storage'
-              )
-            }
+            function () {}
           )
 
           // Remove the forceOverviewTab to ensure element selection takes precedence
@@ -660,8 +613,6 @@ document.addEventListener('DOMContentLoaded', function () {
         }
         // Replace the entire loadSelectedElement handler with this code
         if (request.action === 'loadSelectedElement') {
-          console.log('Popup received loadSelectedElement message:', request)
-
           // Mark this as a special element selection case
           chrome.runtime.sendMessage({
             action: 'markElementSelectionEvent',
@@ -721,11 +672,6 @@ document.addEventListener('DOMContentLoaded', function () {
 
         // Add a new handler for updateFontData
         if (request.action === 'updateFontData') {
-          console.log(
-            'Popup received updateFontData message (without tab switch):',
-            request
-          )
-
           // Store data in localStorage
           if (request.fontData) {
             request.fontData._isFromElementSelection = true
@@ -774,8 +720,6 @@ document.addEventListener('DOMContentLoaded', function () {
 
         // Handle color updates from delayed/animated content
         if (request.action === 'colorUpdateAvailable') {
-          console.log('Received updated colors from delayed/animated content')
-
           // If color tab is initialized, update it with new colors
           if (colorsTab) {
             try {
@@ -796,8 +740,6 @@ document.addEventListener('DOMContentLoaded', function () {
         }
 
         if (request.action === 'colorScanProgress') {
-          console.log('Color scan progress:', request.progress + '%')
-
           // If this is the first progress update, disable tab navigation
           if (request.progress < 5 && !colorScanInProgress) {
             toggleTabNavigation(false)
@@ -814,11 +756,6 @@ document.addEventListener('DOMContentLoaded', function () {
 
         // Handle color updates during scrolling
         if (request.action === 'colorUpdateDuringScroll') {
-          console.log(
-            'Color update during scroll, progress:',
-            request.progress + '%'
-          )
-
           // Update the colors UI with new colors if colorsTab is initialized
           if (colorsTab) {
             // Update progress
@@ -836,8 +773,6 @@ document.addEventListener('DOMContentLoaded', function () {
 
         // Handle completion of color scan
         if (request.action === 'colorScanComplete') {
-          console.log('Color scan complete')
-
           // Re-enable tab navigation
           toggleTabNavigation(true)
 

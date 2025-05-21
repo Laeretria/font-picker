@@ -50,8 +50,6 @@ class FontTab {
 
   // Initialize method
   initialize() {
-    console.log('FontTab: Initializing and clearing all values')
-
     // Clear all displayed values FIRST before any other operations
     this.clearAllFontValues()
 
@@ -84,23 +82,17 @@ class FontTab {
               !parsedData._sourceUrl ||
               parsedData._sourceUrl !== currentUrl
             ) {
-              console.log('Font data is from a different URL, clearing it')
               localStorage.removeItem('selectedElementFontData')
               if (chrome.storage && chrome.storage.local) {
                 chrome.storage.local.remove(['selectedElementFontData'])
               }
             } else if (!parsedData._isFromElementSelection) {
-              console.log(
-                'FontTab: Found data without element selection flag - removing it'
-              )
               localStorage.removeItem('selectedElementFontData')
               if (chrome.storage && chrome.storage.local) {
                 chrome.storage.local.remove(['selectedElementFontData'])
               }
             } else {
-              console.log(
-                'FontTab: Found valid element selection data, will use it'
-              )
+              // console.log
             }
           } catch (e) {
             console.error('Error parsing stored font data:', e)
@@ -128,21 +120,17 @@ class FontTab {
   }
 
   clearAllFontValues() {
-    console.log('Clearing all font values')
     // Clear font names
     if (this.bodyFontElement) this.bodyFontElement.textContent = ''
-    console.log('Cleared body font element')
 
     // Clear font properties
     if (this.fontStyleElement) this.fontStyleElement.textContent = ''
     if (this.fontWeightElement) this.fontWeightElement.textContent = ''
     if (this.fontSizeElement) this.fontSizeElement.textContent = ''
     if (this.lineHeightElement) this.lineHeightElement.textContent = ''
-    console.log('Cleared font style element')
 
     // Clear CSS snippet
     if (this.cssSnippetElement) this.cssSnippetElement.textContent = ''
-    console.log('Cleared CSS snippet')
 
     // Disable copy button when no data
     if (this.copySnippetButton) {
@@ -177,8 +165,6 @@ class FontTab {
     if (this.copyColorButton) {
       this.copyColorButton.style.display = 'none'
     }
-
-    console.log('Cleared color swatch and related elements')
 
     // Reset current color data
     this.currentColorData = {
@@ -778,8 +764,6 @@ class FontTab {
 
   // Add this method
   clearColorValues() {
-    console.log('Clearing color values')
-
     // In the clearAllFontValues method, update the color swatch part to:
     if (this.textColorSwatch) {
       this.textColorSwatch.style.backgroundColor = ''

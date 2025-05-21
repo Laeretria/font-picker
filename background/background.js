@@ -16,13 +16,10 @@ let popupOpen = false
 function safelyStoreData(key, value) {
   try {
     if (chrome.storage && chrome.storage.local) {
-      chrome.storage.local.set({ [key]: value }, function () {
-        console.log('Data saved to storage:', key)
-      })
+      chrome.storage.local.set({ [key]: value }, function () {})
     } else {
       // Fallback to localStorage if chrome.storage isn't available
       localStorage.setItem(key, JSON.stringify(value))
-      console.log('Data saved to localStorage:', key)
     }
   } catch (error) {
     console.error('Storage error:', error)
@@ -59,7 +56,6 @@ function safelyGetData(keys, callback) {
 function safelyInjectContentScript(tabId) {
   // Skip if we don't have the scripting permission
   if (!chrome.scripting) {
-    console.log('Scripting API not available')
     return Promise.reject(new Error('Scripting API not available'))
   }
 
@@ -69,7 +65,6 @@ function safelyInjectContentScript(tabId) {
       { permissions: ['scripting'], origins: ['<all_urls>'] },
       (hasPermission) => {
         if (!hasPermission) {
-          console.log('No scripting permission for this tab')
           reject(new Error('No scripting permission for this tab'))
           return
         }
@@ -81,7 +76,6 @@ function safelyInjectContentScript(tabId) {
             files: ['content/content.js'],
           })
           .then(() => {
-            console.log('Content script injected successfully')
             resolve()
           })
           .catch((err) => {
@@ -95,8 +89,6 @@ function safelyInjectContentScript(tabId) {
 
 // Function to clear all stored data
 function clearAllStoredData() {
-  console.log('CLEARING ALL STORED DATA IN BACKGROUND')
-
   // Clear in-memory variables
   lastSelectedData = null
 
@@ -120,8 +112,6 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
     // Record page load timestamp
     pageLoadTimestamps[tabId] = Date.now()
 
-    console.log(`Tab ${tabId} loaded at ${pageLoadTimestamps[tabId]}`)
-
     // Skip chrome:// pages, chrome web store, file:// URLs, etc.
     if (
       !tab.url.startsWith('chrome://') &&
@@ -135,9 +125,6 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
       // Try to inject the content script but handle potential errors
       safelyInjectContentScript(tabId).catch((err) => {
         // Just log the error - we'll handle this case when the popup tries to communicate
-        console.log(
-          `Could not inject into tab ${tabId}, will retry when needed: ${err.message}`
-        )
       })
     }
   }
@@ -146,7 +133,6 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
 // Listen for tab activation (switching between tabs) with better error handling and tab ID tracking
 chrome.tabs.onActivated.addListener((activeInfo) => {
   const tabId = activeInfo.tabId
-  console.log(`Tab activated: ${tabId} (previous: ${lastActiveTabId})`)
 
   // If we're switching to a different tab, we should clear data
   const tabChanged = lastActiveTabId !== null && lastActiveTabId !== tabId
@@ -168,7 +154,6 @@ chrome.tabs.onActivated.addListener((activeInfo) => {
 
       // If URL changed, clear data and update lastAnalyzedUrl
       if (urlChanged) {
-        console.log('URL changed, clearing data')
         clearAllStoredData()
         lastAnalyzedUrl = tab.url
       }
@@ -183,9 +168,6 @@ chrome.tabs.onActivated.addListener((activeInfo) => {
         // Try to inject but handle failures gracefully
         safelyInjectContentScript(tabId).catch((err) => {
           // Just log the error - we'll handle this case when the popup tries to communicate
-          console.log(
-            `Could not inject into activated tab, will retry when needed: ${err.message}`
-          )
         })
       }
     }
@@ -196,10 +178,6 @@ chrome.tabs.onActivated.addListener((activeInfo) => {
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   if (request.action === 'popupOpened') {
     popupOpen = true
-    console.log(
-      'Popup opened, lastSelectedData status:',
-      lastSelectedData ? 'exists' : 'null'
-    )
 
     // Get current tab ID to check for tab switches
     chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
@@ -265,10 +243,6 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
       const tabChanged =
         lastActiveTabId !== null && lastActiveTabId !== currentTabId
 
-      console.log(
-        `Tab status check: Current tab: ${currentTabId}, Last tab: ${lastActiveTabId}, Changed: ${tabChanged}`
-      )
-
       // Update the stored tab ID
       lastActiveTabId = currentTabId
 
@@ -308,15 +282,6 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
       const recentElementSelection =
         Date.now() - lastElementSelectionTime < 30000
 
-      console.log(
-        `Page status check: URL changed: ${urlChanged}, Tab changed: ${tabChanged}, Page refreshed: ${pageRefreshed}, Recent selection: ${recentElementSelection}`
-      )
-      console.log(`  Current URL: ${currentUrl}, Stored URL: ${storedUrl}`)
-      console.log(`  Current tab: ${tabId}, Last tab: ${lastActiveTabId}`)
-      console.log(
-        `  Page load time: ${loadTime}, Last selection time: ${lastElementSelectionTime}`
-      )
-
       // Update stored values
       lastAnalyzedUrl = currentUrl
       lastActiveTabId = tabId
@@ -337,7 +302,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   // NEW: Mark element selection event
   if (request.action === 'markElementSelectionEvent') {
     lastElementSelectionTime = request.timestamp || Date.now()
-    console.log(`Marked element selection event at ${lastElementSelectionTime}`)
+
     sendResponse({ status: 'ok' })
     return true
   }
@@ -350,8 +315,6 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   }
 
   if (request.action === 'elementSelected') {
-    console.log('Background received element selection:', request)
-
     // Update selection timestamp
     lastElementSelectionTime = Date.now()
 
@@ -368,11 +331,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     safelyStoreData('lastSelectionTimestamp', Date.now())
 
     // EXPLICITLY set the pendingElementSelection flag to ensure font tab opens
-    chrome.storage.local.set({ pendingElementSelection: true }, function () {
-      console.log(
-        'EXPLICITLY set pendingElementSelection flag for element selection'
-      )
-    })
+    chrome.storage.local.set({ pendingElementSelection: true }, function () {})
 
     try {
       // Try to show a notification, but handle errors gracefully
@@ -386,7 +345,6 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
           requireInteraction: true,
         })
       } else {
-        console.log('Notifications API not available')
         // Try to reopen the popup directly
         if (chrome.action && chrome.action.openPopup) {
           setTimeout(() => {

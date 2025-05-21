@@ -29,7 +29,7 @@ class ColorsTab {
     if (!this.hasScannedUrl) {
       this.startAutoScrollAnalysis()
     } else {
-      console.log('URL already scanned, skipping auto-scroll analysis')
+      // Skip auto-scroll analysis for already scanned URLs
     }
 
     // Initial analysis (always do this to get current colors)

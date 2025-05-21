@@ -14,8 +14,6 @@ class OverviewTab {
       this.headingsContainer.classList.add('ultra-compact')
     }
 
-    console.log('OverviewTab initialized, analyzing page...')
-
     // Immediately analyze the current page for headings and body font
     this.analyzeCurrentPageHeadingsAndBody()
 
@@ -88,7 +86,6 @@ class OverviewTab {
 
               // Add the body font data FIRST (if available)
               if (bodyFontData) {
-                console.log('Adding body font element with data:', bodyFontData)
                 this.addBodyFontElement(bodyFontData)
                 contentAdded = true
               }
@@ -194,8 +191,6 @@ class OverviewTab {
       return
     }
 
-    console.log('Creating body font card with data:', bodyFontData)
-
     try {
       // Create new ultra-compact body font card
       const bodyCard = document.createElement('div')
@@ -278,7 +273,6 @@ class OverviewTab {
 
       // Add the card to the container at the beginning
       this.headingsContainer.appendChild(bodyCard)
-      console.log('Body font card added to container')
     } catch (error) {
       console.error('Error creating body font card:', error)
     }
